@@ -6,7 +6,6 @@
 
 #include "Arduino.h"
 #include "EspMQTTClient.h"
-#include "driver/i2s.h"
 #include <esp_heap_caps.h>
 
 #include "AudioTools.h"

@@ -65,6 +65,8 @@ void onConnectionEstablished()
         {
           memcpy(&metadata, payload.c_str(), sizeof(ChunkMetadata));
           Serial.printf("chunk number:%d, total_chunks:%d, chunk_size:%d\n", metadata.chunk_number, metadata.chunk_size, metadata.chunk_size);
+          memcpy(mp3Buffer, payload.c_str() + sizeof(ChunkMetadata), metadata.chunk_size);
+          
         }
         else
         {
