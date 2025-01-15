@@ -1,0 +1,23 @@
+{
+  "ros.distro": "jazzy",
+  "explorer.autoReveal": false,
+  "editor.tabSize": 2,
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "files.associations": {
+    "*.sqlbook": "sql",
+    "*.ndjson": "jsonl",
+    "*.dbclient-js": "javascript",
+    "\"*.html.heex\"": "\"html\"",
+    "array": "cpp",
+    "*.tcc": "cpp",
+    "fstream": "cpp",
+    "ostream": "cpp",
+    "ratio": "cpp",
+    "sstream": "cpp",
+    "streambuf": "cpp",
+    "typeinfo": "cpp",
+    "atomic": "cpp",
+    "cstdint": "cpp"
+  }
+}

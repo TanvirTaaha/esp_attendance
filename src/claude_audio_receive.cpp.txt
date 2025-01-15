@@ -1,0 +1,131 @@
+#include "attendance.h"
+
+// I2S configuration
+const int i2s_num = 0;
+const int sample_rate = 44100;  // Standard MP3 sample rate
+const int bits_per_sample = 16; // MP3 typically uses 16-bit samples
+
+// Buffer sizes
+const int MQTT_CHUNK_SIZE = 512;
+uint8_t audioBuffer[MQTT_CHUNK_SIZE];
+
+// Chunk metadata structure (must match the C++ sender)
+struct ChunkMetadata
+{
+  int chunk_number;
+  int total_chunks;
+  int chunk_size;
+};
+
+EspMQTTClient client(
+    "Taaha's Pixel",
+    "taaha1taaha",
+    "192.168.156.126",
+    "ESP32Client",
+    1883);
+
+void mqtt_setup()
+{
+  // Serial.begin(115200);
+  // while (!Serial)
+  //   ;
+
+  // Configure I2S
+  i2s_config_t i2s_config = {
+      .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
+      .sample_rate = sample_rate,
+      .bits_per_sample = (i2s_bits_per_sample_t)bits_per_sample,
+      .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
+      .communication_format = (i2s_comm_format_t)(I2S_COMM_FORMAT_STAND_I2S),
+      .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+      .dma_buf_count = 8,
+      .dma_buf_len = 1024,
+      .use_apll = false,
+      .tx_desc_auto_clear = true,
+      .fixed_mclk = 0};
+
+  // Install and configure I2S driver
+  // i2s_driver_install(i2s_num, &i2s_config, 0, NULL);
+
+  // Configure I2S pins
+  i2s_pin_config_t pin_config = {
+      .bck_io_num = 26,   // Bit Clock
+      .ws_io_num = 12,    // Word Select
+      .data_out_num = 22, // Data Out
+      .data_in_num = -1   // Not used
+  };
+  // i2s_set_pin(i2s_num, &pin_config);
+
+  client.enableDebuggingMessages();
+  Serial.println("ESP32 Audio Receiver initialized");
+}
+
+void onConnectionEstablished()
+{
+  Serial.println("Connected to MQTT broker");
+
+  // Subscribe to audio stream
+  client.subscribe("streams/audio", [](const String &payload)
+                   {
+        int length = payload.length();
+        
+        // Check if payload is large enough to contain metadata
+        if (length > sizeof(ChunkMetadata)) {
+            // Copy payload to buffer
+            memcpy(audioBuffer, payload.c_str(), length);
+            
+            // Extract metadata
+            ChunkMetadata metadata;
+            memcpy(&metadata, audioBuffer, sizeof(ChunkMetadata));
+            
+            // Get audio data (skip metadata)
+            uint8_t* audioData = audioBuffer + sizeof(ChunkMetadata);
+            int audioLength = metadata.chunk_size;
+            
+            // Debug output
+            Serial.printf("Chunk: %d/%d, Size: %d bytes\n", 
+                        metadata.chunk_number + 1, 
+                        metadata.total_chunks, 
+                        audioLength);
+            
+            // Write audio data to I2S
+            size_t bytes_written = 0;
+            // i2s_write(i2s_num, audioData, audioLength, &bytes_written, portMAX_DELAY);
+            
+            // Verify write operation
+            if (bytes_written != audioLength) {
+                Serial.printf("I2S write mismatch: %d/%d bytes\n", 
+                            bytes_written, audioLength);
+            }
+            
+            // Print first few bytes for debugging
+            if (metadata.chunk_number == 0) {
+                Serial.print("First chunk data: ");
+                for (int i = 0; i < min(8, audioLength); i++) {
+                    Serial.printf("%02X ", audioData[i]);
+                }
+                Serial.println();
+            }
+        } });
+
+  // Status message
+  client.publish("audio/status", "ESP32 ready for MP3 streaming");
+  client.subscribe("FaceRecognition/match_id", [](const String &payload)
+                   { Serial.printf("Payload:%s\n", payload.c_str()); });
+}
+
+void mqtt_loop()
+{
+  client.loop();
+
+  // Optional: Add error checking and recovery here
+  static unsigned long lastCheck = 0;
+  if (millis() - lastCheck > 5000)
+  {
+    lastCheck = millis();
+    if (!client.isConnected())
+    {
+      Serial.println("Connection lost, attempting reconnect...");
+    }
+  }
+}
