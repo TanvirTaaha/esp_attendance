@@ -1,13 +1,19 @@
 #include "attendance.h"
 
+Task copyTask("copy_task", 3000, 1, 0);
+
 void setup()
 {
   Serial.begin(115200);
   while (!Serial)
     ;
-  // audio_tools_setup();
+  audio_tools_setup();
   mqtt_setup();
   // sinewave_generator_init();
+
+  copyTask.begin([]()
+                 { copier.copy(); });
+
 #ifdef ATTENDANCE_DEBUG
   Serial.println("Started:setup done.");
 #endif
@@ -41,6 +47,10 @@ void loop()
   // sinewave_generator_loop();
   // restart_audio();
   mqtt_loop();
+  if (has_play_ended() && has_all_received())
+  {
+    restart_audio();
+  }
   // audio_tools_loop();
   // delay(1000);
 }

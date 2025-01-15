@@ -27,7 +27,7 @@ void mqtt_setup()
   Serial.println("mqtt_setup called");
 #endif
   // Optional functionalities of EspMQTTClient
-  mqttClient.setMaxPacketSize(max_mp3_len + sizeof(ChunkMetadata));
+  mqttClient.setMaxPacketSize(mqtt_chunk + sizeof(ChunkMetadata));
   mqttClient.enableDebuggingMessages();                                   // Enable debugging messages sent to serial output
   mqttClient.enableHTTPWebUpdater();                                      // Enable the web updater. User and password default to values of MQTTUsername and MQTTPassword. These can be overridded with enableHTTPWebUpdater("user", "password").
   mqttClient.enableOTA();                                                 // Enable OTA (Over The Air) updates. Password defaults to MQTTPassword. Port is the default OTA port. Can be overridden with enableOTA("password", port).
@@ -60,17 +60,38 @@ void onConnectionEstablished()
       [](const String &topic, const String &payload)
       {
         Serial.println("(From wildcard) topic: " + topic);
-        Serial.printf("Payload size:%u bytes\n", payload.length());
+        Serial.println();
+        Serial.print("PayPayload size:");
+        Serial.print(payload.length());
+        Serial.println(" bytes");
         if (payload.length() >= sizeof(ChunkMetadata))
         {
           memcpy(&metadata, payload.c_str(), sizeof(ChunkMetadata));
           Serial.printf("chunk number:%d, total_chunks:%d, chunk_size:%d\n", metadata.chunk_number, metadata.chunk_size, metadata.chunk_size);
-          memcpy(mp3Buffer, payload.c_str() + sizeof(ChunkMetadata), metadata.chunk_size);
-          
+          if (payload.length() != (metadata.chunk_size + sizeof(ChunkMetadata)))
+            Serial.println("Packet size does not match");
         }
         else
         {
           Serial.printf("payload size small: expected:%lu, got:%lu\n", sizeof(ChunkMetadata), payload.length());
+          Serial.print("Payload:");
+          Serial.println(payload);
+        }
+        Serial.println("Printing every bytes:");
+        for (int i = 0; i < payload.length(); i++)
+        {
+          Serial.printf("0x%x ", payload.c_str()[i]);
+          if (i % 9 == 0)
+          {
+            Serial.println();
+          }
+        }
+        Serial.println();
+
+        size_t written = queue.write((uint8_t *)payload.c_str() + sizeof(ChunkMetadata), payload.length() - sizeof(ChunkMetadata));
+        if (written != metadata.chunk_size)
+        {
+          Serial.printf("Queue full! Only wrote %d/%d bytes\n", written, metadata.chunk_size);
         }
       });
 
@@ -85,4 +106,9 @@ void onConnectionEstablished()
 void mqtt_loop()
 {
   mqttClient.loop();
+}
+
+bool has_all_received()
+{
+  return metadata.chunk_number == metadata.total_chunks;
 }
