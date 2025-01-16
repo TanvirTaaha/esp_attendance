@@ -69,7 +69,19 @@ void onConnectionEstablished()
           memcpy(&metadata, payload.c_str(), sizeof(ChunkMetadata));
           Serial.printf("chunk number:%d, total_chunks:%d, chunk_size:%d\n", metadata.chunk_number, metadata.chunk_size, metadata.chunk_size);
           if (payload.length() != (metadata.chunk_size + sizeof(ChunkMetadata)))
+          {
             Serial.println("Packet size does not match");
+          }
+          if (metadata.chunk_size != (payload.length() - sizeof(ChunkMetadata)))
+          {
+            Serial.println("\nPayload rest of the spaces are not equal to chunk size\n");
+            Serial.printf("\n\nchunk size:%u, payload.size():%lu\n\n", metadata.chunk_size, (payload.length() - sizeof(ChunkMetadata)));
+          }
+          size_t written = queue.write((uint8_t *)payload.c_str() + sizeof(ChunkMetadata), payload.length() - sizeof(ChunkMetadata));
+          if (written != metadata.chunk_size)
+          {
+            Serial.printf("Queue full! Only wrote %d/%d bytes\n", written, metadata.chunk_size);
+          }
         }
         else
         {
@@ -87,12 +99,6 @@ void onConnectionEstablished()
           }
         }
         Serial.println();
-
-        size_t written = queue.write((uint8_t *)payload.c_str() + sizeof(ChunkMetadata), payload.length() - sizeof(ChunkMetadata));
-        if (written != metadata.chunk_size)
-        {
-          Serial.printf("Queue full! Only wrote %d/%d bytes\n", written, metadata.chunk_size);
-        }
       });
 
   // Publish a message to "mytopic/test"

@@ -17,7 +17,7 @@ auto vcfg = volume.defaultConfig();
 void audio_tools_setup()
 {
 #ifdef ATTENDANCE_DEBUG
-  AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Info);
+  // AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Info);
 #else
   AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Error);
 #endif

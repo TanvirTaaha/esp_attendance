@@ -26,7 +26,7 @@ extern VolumeStream volume;
 extern StreamCopy copier;
 
 // MQTT
-const size_t mqtt_chunk = 16 * 1024; // 16kb
+const size_t mqtt_chunk = 1024; // 16kb
 
 // AudioTools functions
 void audio_tools_setup();
