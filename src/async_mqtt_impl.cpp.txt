@@ -1,0 +1,14 @@
+/**
+ * @file async_mqtt_impl.cpp
+ * @author Tanvir Taaha (tanvir.taaha@gmail.com)
+ * @brief Workaround to remedy linking issue since AsyncMQTT_ESP.h includes function implementations directly in the header file.
+ *        This makes including the AsyncMQTT_ESP.h file in multiple cpp problematic. It is hard to keep making sure that never happens.
+ *        That's why including the impl manually here and instead of including 
+ * @version 0.1
+ * @date 2025-01-21
+ * 
+ * @copyright Copyright (c) 2025
+ * 
+ */
+
+#include <AsyncMQTT_ESP32_Impl.h>
