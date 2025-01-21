@@ -11,8 +11,28 @@ void setup()
   mqtt_setup();
   // sinewave_generator_init();
 
-  copyTask.begin([]()
-                 { copier.copy(); });
+  copyTask.begin(
+      []()
+      {
+        if (should_play)
+        {
+          static size_t copied_bytes;
+          copied_bytes = copier.copy();
+#ifdef ATTENDANCE_DEBUG
+          Serial.printf("Copying stream: %d bytes\n", copied_bytes);
+#endif
+        }
+        else
+        {
+#ifdef ATTENDANCE_DEBUG
+          Serial.println("Not copying stream");
+#endif
+          vTaskDelay(pdMS_TO_TICKS(100));
+        }
+#ifdef ATTENDANCE_DEBUG
+        Serial.printf("should_play:%d\n", should_play);
+#endif
+      });
 
 #ifdef ATTENDANCE_DEBUG
   Serial.println("Started:setup done.");
@@ -42,13 +62,19 @@ void loop()
   {
     lasttime = millis();
     Serial.println("main loop...");
+    Serial.printf("queue.available():%d, \n", queue.available());
   }
 #endif
   // sinewave_generator_loop();
   // restart_audio();
   mqtt_loop();
-  if (has_play_ended() && has_all_received())
+  // If already was playing(should_play) and then ended copying and has all received,
+  // Restart audio
+  if (queue.available() == 0 && has_all_received() && should_play)
   {
+#ifdef ATTENDANCE_DEBUG
+    Serial.println("Main loop. Play has ended. Restarting audio.");
+#endif
     restart_audio();
   }
   // audio_tools_loop();

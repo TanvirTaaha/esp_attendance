@@ -2,7 +2,7 @@
 #ifndef __ATTENDANCE_H__
 #define __ATTENDANCE_H__
 
-#define ATTENDANCE_DEBUG
+// #define ATTENDANCE_DEBUG
 
 #include "Arduino.h"
 #include "EspMQTTClient.h"
@@ -24,15 +24,16 @@ const size_t max_mp3_len = 64 * 1024; // 64KB
 extern QueueStream<uint8_t> queue;
 extern VolumeStream volume;
 extern StreamCopy copier;
+extern volatile bool should_play;
 
 // MQTT
-const size_t mqtt_chunk = 1024; // 16kb
+const size_t max_mqtt_chunk = 1024; // 1KB
+const uint8_t mqtt_qos = 1;
 
 // AudioTools functions
 void audio_tools_setup();
 void audio_tools_loop();
 void restart_audio();
-bool has_play_ended();
 
 // MQTT functions
 void mqtt_setup();

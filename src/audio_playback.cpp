@@ -6,6 +6,7 @@ I2SStream i2s;
 VolumeStream volume(i2s);
 EncodedAudioStream decoder(&volume, new MP3DecoderHelix); // output to decoder
 StreamCopy copier(decoder, queue);                        // copy into out that decodes and outputs to i2s
+volatile bool should_play = false;
 
 // for access from restart function
 auto cfg = i2s.defaultConfig(TX_MODE);
@@ -49,6 +50,7 @@ void restart_audio()
 #ifdef ATTENDANCE_DEBUG
   Serial.println("restarting audio-tools");
 #endif
+  should_play = false;
 
   i2s.end();
   volume.end();
@@ -63,9 +65,4 @@ void restart_audio()
 #ifdef ATTENDANCE_DEBUG
   Serial.println("Audio RESTARTED");
 #endif
-}
-
-bool has_play_ended()
-{
-  return (queue.available() == 0) && !copier.isActive();
 }
