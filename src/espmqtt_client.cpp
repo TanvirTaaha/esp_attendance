@@ -1,9 +1,14 @@
-/*
-  SimpleMQTTClient.ino
-  The purpose of this exemple is to illustrate a simple handling of MQTT and Wifi connection.
-  Once it connects successfully to a Wifi network and a MQTT broker, it subscribe to a topic and send a message to it.
-  It will also send a message delayed 5 seconds later.
-*/
+/**
+ * @file espmqtt_client.cpp
+ * @author Tanvir Hossain Taaha (tanvir.taaha@gmail.com)
+ * @brief Implementaion of fucntions related to networking, mqtt and file chunking
+ * @version 0.1
+ * @date 2025-01-21
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
+
 #include "attendance.h"
 
 EspMQTTClient mqttClient(

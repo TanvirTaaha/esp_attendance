@@ -1,3 +1,14 @@
+/**
+ * @file main.cpp
+ * @author Tanvir Hossain Taaha (tanvir.taaha@gmail.com)
+ * @brief Main cpp file. contains arduino setup and loop functions
+ * @version 0.1
+ * @date 2025-01-21
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
+
 #include "attendance.h"
 
 Task copyTask("copy_task", 3000, 1, 0);

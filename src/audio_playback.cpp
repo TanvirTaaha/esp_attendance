@@ -1,3 +1,14 @@
+/**
+ * @file audio_playback.cpp
+ * @author Tanvir Hossain Taaha (tanvir.taaha@gmail.com)
+ * @brief Contains definitions of functions related to audio playback
+ * @version 0.1
+ * @date 2025-01-21
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
+
 #include "attendance.h"
 
 BufferRTOS<uint8_t> bufferRTOS(max_mp3_len);

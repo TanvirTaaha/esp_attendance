@@ -1,3 +1,14 @@
+/**
+ * @file attendance.h
+ * @author Tanvir Hossain Taaha (tanvir.taaha@gmail.com)
+ * @brief Header file containing all the includes and definitions
+ * @version 0.1
+ * @date 2025-01-21
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
+
 #pragma once
 #ifndef __ATTENDANCE_H__
 #define __ATTENDANCE_H__
