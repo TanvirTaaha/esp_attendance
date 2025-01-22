@@ -22,6 +22,8 @@
 // #define MQTT_HOST "broker.emqx.io" // Broker address
 #define MQTT_PORT 1883
 
+#define MQTT_QOS 2
+
 const char *PubTopic = "streams/audio"; // Topic to publish
 
 // chunk sizes
