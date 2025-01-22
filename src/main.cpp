@@ -36,4 +36,18 @@ void loop()
     last_millis = millis();
   }
 #endif
+
+  if (should_play)
+  {
+    static size_t bytes_copied = 0;
+    bytes_copied = copier.copy();
+    if (bytes_copied <= 0)
+    {
+      LOG_DEBUG("Copy ended");
+    }
+    else
+    {
+      LOG_DEBUG("Copying..bytes:%d", bytes_copied);
+    }
+  }
 }

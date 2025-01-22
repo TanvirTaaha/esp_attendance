@@ -35,14 +35,22 @@ extern "C"
 #define ACTIVATE_LOGGING 1
 #include "debug.h"
 
+#define DAC_PIN_LRC 13
+#define DAC_PIN_BCLK 12
+#define DAC_PIN_DIN 14
+
 // mqtt
 extern bool is_subscribed;
 void async_mqtt_setup();
+const size_t buffer_size_base64 = 30 * 1024;
+const size_t buffer_size_orig = (buffer_size_base64 * 3) / 4; // for no padding
+extern char *buffer_base64;
+extern uint8_t *buffer_mp3;
 
 // audio playback
-const int buffer_size_base64 = 20*1024;
-const int buffer_size_orig = (buffer_size_base64 * 3) / 4; // for no padding
-extern BufferRTOS<uint8_t> bufferRTOS;
-extern QueueStream<uint8_t> queue;
+extern volatile bool should_play;
+extern MemoryStream audio_data;
+extern StreamCopy copier;
 void audio_init();
+void restart_audio();
 #endif

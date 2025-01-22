@@ -20,6 +20,9 @@ AsyncMqttClient mqttClient;
 TimerHandle_t mqttReconnectTimer;
 TimerHandle_t wifiReconnectTimer;
 
+char *buffer_base64 = nullptr;
+uint8_t *buffer_mp3 = nullptr;
+size_t buffer_size = 0;
 bool is_subscribed = false;
 
 void connectToWifi()
@@ -168,34 +171,53 @@ void onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessagePrope
   Serial.println(total);
 #endif
   payload[len] = '\0';
-  LOG_DEBUG("Received message:%s", payload);
+  // LOG_DEBUG("Received message:%s", payload);
 
-  if (index == 0)
+  // Copy if only it will fit
+  if (index + len <= buffer_size_base64)
   {
-    LOG_DEBUG("Emptying queue since new data stream detected");
-  }
-  // Copy if only it will fit have to be '<'
-  if (index + len < buffer_size_base64)
-  {
-    size_t written = queue.write((uint8_t *)payload, len);
-    LOG_DEBUG("written:%d, len:%d", written, len);
+    memcpy(buffer_base64 + index, payload, len);
+    buffer_base64[index + len] = '\0';
   }
   else
   {
-    LOG_ERROR("Buffer overflow last packet(s) are being discarded");
+    LOG_WARN("Buffer overflow last packet(s) are being discarded");
   }
   // print after the last packet is received(even not copied)
   if (index + len == total)
   {
-    Serial.println("Full Message:");
-    char buffer[100];
-    while (queue.available())
+    LOG_INFO("Message Ended.");
+    LOG_DEBUG("Full Message:\n\"%s\"\n", buffer_base64);
+    int padding = 0;
+    while (buffer_base64[min(total, buffer_size_base64) - padding - 1] == '=')
     {
-      size_t bytes_read = queue.readBytes((uint8_t *)buffer, MIN(100, queue.available()));
-      buffer[bytes_read] = '\0';
-      Serial.print(buffer);
+      padding++;
     }
-    Serial.println();
+    size_t expected_decoded_len = (total / 4) * 3 - padding;
+    size_t decoded_bytes_written;
+    LOG_DEBUG("expected length:%lu\n", expected_decoded_len);
+    if (buffer_mp3 != nullptr)
+    {
+      int ret = mbedtls_base64_decode(buffer_mp3, expected_decoded_len, &decoded_bytes_written, (uint8_t *)buffer_base64, min(total, buffer_size_base64));
+      if (ret == 0)
+      {
+        LOG_DEBUG("Base64 decoding SUCCESS");
+        LOG_DEBUG("expected_decoded_len:%d, decoded_bytes_written:%d\n", expected_decoded_len, decoded_bytes_written);
+        audio_data.setValue((uint8_t *)buffer_mp3, min(total, buffer_size_orig));
+        audio_data.resize(min(total, buffer_size_orig));
+        restart_audio();
+        should_play = true;
+      }
+      else
+      {
+        LOG_ERROR("expected_decoded_len:%d, decoded_bytes_written:%d\n", expected_decoded_len, decoded_bytes_written);
+        LOG_ERROR("Base64 conversion failed. error-code:%d\n", ret);
+      }
+    }
+    else
+    {
+      LOG_ERROR("buffer_mp3 is nullptr");
+    }
   }
 }
 
@@ -225,4 +247,7 @@ void async_mqtt_setup()
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
 
   connectToWifi();
+
+  buffer_base64 = (char *)malloc(buffer_size_base64 + 1); // 1 extra to avoid overflow
+  buffer_mp3 = (uint8_t *)malloc(buffer_size_orig + 1);   // 1 extra to avoid overflow
 }

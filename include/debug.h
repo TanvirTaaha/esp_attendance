@@ -12,20 +12,21 @@
 
 // Base debug macro
 #if ACTIVATE_LOGGING
-#define DEBUG_PRINT(level, label, fmt, ...) \
-  do                                        \
-  {                                         \
-    if (level <= CURRENT_LOG_LEVEL)         \
-    {                                       \
-      unsigned long timestamp = millis();   \
-      Serial.print("[");                    \
-      Serial.print(timestamp);              \
-      Serial.print("] ");                   \
-      Serial.print(label);                  \
-      Serial.print(": ");                   \
-      Serial.printf(fmt, ##__VA_ARGS__);    \
-      Serial.println();                     \
-    }                                       \
+#define DEBUG_PRINT(level, label, fmt, ...)   \
+  do                                          \
+  {                                           \
+    if (level <= CURRENT_LOG_LEVEL)           \
+    {                                         \
+      /*unsigned long timestamp = millis();*/ \
+      Serial.print("[");                      \
+      /*Serial.print(timestamp);*/            \
+      /*Serial.print("-");*/                  \
+      Serial.print(label);                    \
+      Serial.print("] ");                     \
+      Serial.print(": ");                     \
+      Serial.printf(fmt, ##__VA_ARGS__);      \
+      Serial.println();                       \
+    }                                         \
   } while (0)
 #else
 #define DEBUG_PRINT(level, label, fmt, ...) \
