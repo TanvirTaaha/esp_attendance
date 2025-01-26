@@ -250,7 +250,8 @@ void async_mqtt_setup()
 
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
 
-  connectToWifi();
+  // connectToWifi();
+  wifiman_setup();
 
   buffer_base64 = (char *)malloc(buffer_size_base64 + 1); // 1 extra to avoid overflow
   buffer_mp3 = (uint8_t *)malloc(buffer_size_orig + 1);   // 1 extra to avoid overflow

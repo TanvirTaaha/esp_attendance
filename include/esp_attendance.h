@@ -25,6 +25,9 @@ extern "C"
 #include "freertos/timers.h"
 }
 
+// WifiMan
+#include <WiFiManager.h>
+
 // Audio Playback
 #include <AudioTools.h>
 #include "AudioTools/AudioCodecs/CodecMP3Helix.h"
@@ -46,9 +49,14 @@ extern char cmd;
 #define DELAY_AFTER_COPY_ENDED 2000
 #define AUDIO_COPIER_BUFFER_SIZE 2048
 
+// wifiman
+void wifiman_setup();
+void wifiman_loop();
+
 // mqtt
 extern bool is_subscribed;
 void async_mqtt_setup();
+void connectToMqtt();
 const size_t buffer_size_base64 = 35 * 1024;
 const size_t buffer_size_orig = ((buffer_size_base64 + 3) / 4) * 3; // for no padding
 extern char *buffer_base64;

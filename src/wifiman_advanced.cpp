@@ -1,8 +1,15 @@
 /**
- * WiFiManager advanced demo, contains advanced configurartion options
- * Implements TRIGGEN_PIN button press, press for ondemand configportal, hold for 3 seconds for reset settings.
+ * @file wifiman_advanced.cpp
+ * @author Tanvir Hossain Taaha (tanvir.taaha@gmail.com)
+ * @brief Manages over the air update of wifi credentials
+ * @version 0.1
+ * @date 2025-01-26
+ *
+ * @copyright Copyright (c) 2025
+ *
  */
-#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
+
+#include "esp_attendance.h"
 
 #define TRIGGER_PIN 0
 
@@ -12,6 +19,10 @@ bool wm_nonblocking = false; // change to true to use non blocking
 
 WiFiManager wm;                    // global wm instance
 WiFiManagerParameter custom_field; // global param ( for non blocking w params )
+
+void saveParamCallback();
+void checkButton();
+String getParam(String name);
 
 void wifiman_setup()
 {
@@ -23,7 +34,7 @@ void wifiman_setup()
 
   pinMode(TRIGGER_PIN, INPUT);
 
-  // wm.resetSettings(); // wipe settings
+  wm.resetSettings(); // wipe settings
 
   if (wm_nonblocking)
     wm.setConfigPortalBlocking(false);
@@ -86,6 +97,7 @@ void wifiman_setup()
   {
     // if you get here you have connected to the WiFi
     Serial.println("connected...yeey :)");
+    connectToMqtt();
   }
 }
 
