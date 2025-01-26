@@ -63,21 +63,9 @@ void loop()
 
   if (should_play)
   {
-    static size_t bytes_copied = 0;
-    bytes_copied = copier.copy();
-    if (bytes_copied <= 0)
-    {
-      LOG_DEBUG("Copy ended");
-      if (i2s.available() <= 0)
-      {
-        LOG_DEBUG("i2s output completed");
-        delay(50); // slight delay to make sure audio has been played properly
-        restart_audio();
-      }
-    }
-    else
-    {
-      LOG_DEBUG("Copying..bytes:%d", bytes_copied);
-    }
+    copier.copyAll();
+    dec.writeSilence(1000);
+    copier.copyAll();
+    restart_audio();
   }
 }

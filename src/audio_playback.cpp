@@ -10,11 +10,12 @@
  */
 
 #include "esp_attendance.h"
+AudioInfo audio_info(44100, 1, 16);
 MemoryStream audio_data = MemoryStream(buffer_mp3, buffer_size_orig);
 I2SStream i2s;
 VolumeStream volume(i2s);
 EncodedAudioStream dec(&volume, new MP3DecoderHelix());
-StreamCopy copier(dec, audio_data);
+StreamCopy copier(dec, audio_data, AUDIO_COPIER_BUFFER_SIZE);
 
 volatile bool should_play = false;
 
@@ -35,6 +36,7 @@ void audio_init()
   cfg.pin_bck = DAC_PIN_BCLK;
   cfg.pin_ws = DAC_PIN_LRC;
   cfg.pin_data = DAC_PIN_DIN;
+  cfg.copyFrom(audio_info);
   // cfg.sample_rate = memoryStream.audioInfo().sample_rate;
   // cfg.sample_rate = 44100;
   // cfg.channels = memoryStream.audioInfo().channels;
@@ -47,7 +49,7 @@ void audio_init()
   vol = 0.2;
   volume.setVolume(vol);
 
-  dec.begin();
+  dec.begin(audio_info);
   LOG_INFO("Audio started");
 }
 
@@ -57,14 +59,23 @@ void restart_audio()
 
   should_play = false;
 
+  dec.flush();
+  dec.end(); // Have to be called before it's downstreams ended
+  LOG_DEBUG("After dec end");
   i2s.end();
   volume.end();
-  dec.end();
+  copier.end();
+  LOG_DEBUG("After copier end");
 
+  delay(50);
+  LOG_DEBUG("After delay 100");
   i2s.begin(cfg);
+  LOG_DEBUG("After i2s begin");
   volume.begin(vcfg);
-  dec.begin();
-  copier.begin();
-
+  LOG_DEBUG("After volume begin");
+  dec.begin(audio_info);
+  LOG_DEBUG("After dec begin");
+  copier.begin(dec, audio_data);
+  LOG_DEBUG("After copier begin");
   LOG_DEBUG("Audio RESTARTED");
 }

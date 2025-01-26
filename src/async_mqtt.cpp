@@ -191,7 +191,7 @@ void onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessagePrope
   if (index + len == total)
   {
     LOG_INFO("Message Ended.");
-    LOG_DEBUG("Full Message:\n\"%s\"\n", buffer_base64);
+    // LOG_DEBUG("Full Message:\n\"%s\"\n", buffer_base64);
     int padding = 0;
     while (buffer_base64[min(total, buffer_size_base64) - padding - 1] == '=')
     {

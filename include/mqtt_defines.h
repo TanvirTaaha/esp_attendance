@@ -18,7 +18,8 @@
 #define WIFI_SSID "MISINFRA"
 #define WIFI_PASSWORD "123456#@227"
 
-#define MQTT_HOST IPAddress(192, 168, 21, 44)
+#define MQTT_HOST IPAddress(192, 168, 21, 44) // taaha
+// #define MQTT_HOST IPAddress(192, 168, 44, 17) // gpuserver2x
 // #define MQTT_HOST "broker.emqx.io" // Broker address
 #define MQTT_PORT 1883
 
