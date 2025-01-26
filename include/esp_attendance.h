@@ -49,7 +49,7 @@ extern char cmd;
 // mqtt
 extern bool is_subscribed;
 void async_mqtt_setup();
-const size_t buffer_size_base64 = 30 * 1024;
+const size_t buffer_size_base64 = 35 * 1024;
 const size_t buffer_size_orig = ((buffer_size_base64 + 3) / 4) * 3; // for no padding
 extern char *buffer_base64;
 extern uint8_t *buffer_mp3;
