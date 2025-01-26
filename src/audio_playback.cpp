@@ -71,8 +71,10 @@ void restart_audio()
   LOG_DEBUG("After delay 100");
   i2s.begin(cfg);
   LOG_DEBUG("After i2s begin");
+  vcfg.allow_boost = true;
   volume.begin(vcfg);
-  LOG_DEBUG("After volume begin");
+  volume.setVolume(vol);
+  LOG_DEBUG("After volume begin:volume:%f", vol);
   dec.begin(audio_info);
   LOG_DEBUG("After dec begin");
   copier.begin(dec, audio_data);
