@@ -11,6 +11,9 @@
 
 #include "esp_attendance.h"
 
+float vol = 0.0;
+char cmd;
+
 void setup()
 {
   Serial.begin(115200);
@@ -37,6 +40,27 @@ void loop()
   }
 #endif
 
+  if (Serial.available() > 0)
+  {
+    cmd = Serial.read();
+    switch (cmd)
+    {
+    case 'V':
+      vol += 0.02;
+      volume.setVolume(vol);
+      LOG_INFO("Volume level increased to: %f", vol);
+      break;
+    case 'v':
+      vol -= 0.02;
+      volume.setVolume(vol);
+      LOG_INFO("Volume level decreased to: %f", vol);
+      break;
+    default:
+      LOG_INFO("Invalid Command, current volume level:%f", vol);
+      break;
+    }
+  }
+
   if (should_play)
   {
     static size_t bytes_copied = 0;
@@ -44,6 +68,12 @@ void loop()
     if (bytes_copied <= 0)
     {
       LOG_DEBUG("Copy ended");
+      if (i2s.available() <= 0)
+      {
+        LOG_DEBUG("i2s output completed");
+        delay(50); // slight delay to make sure audio has been played properly
+        restart_audio();
+      }
     }
     else
     {

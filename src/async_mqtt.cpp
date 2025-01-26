@@ -172,12 +172,16 @@ void onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessagePrope
 #endif
   payload[len] = '\0';
   // LOG_DEBUG("Received message:%s", payload);
-
+  if (buffer_base64 == nullptr || buffer_mp3 == nullptr)
+  {
+    LOG_ERROR("Buffers not allocated: nullptr");
+    return;
+  }
   // Copy if only it will fit
   if (index + len <= buffer_size_base64)
   {
     memcpy(buffer_base64 + index, payload, len);
-    buffer_base64[index + len] = '\0';
+    buffer_base64[index + len] = '\0'; // Not sure whether it is necessary though
   }
   else
   {
@@ -193,9 +197,9 @@ void onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessagePrope
     {
       padding++;
     }
-    size_t expected_decoded_len = (total / 4) * 3 - padding;
+    size_t expected_decoded_len = ((total + 3) / 4) * 3 - padding;
     size_t decoded_bytes_written;
-    LOG_DEBUG("expected length:%lu\n", expected_decoded_len);
+    LOG_DEBUG("expected_decoded_len:%lu, Decoding...\n", expected_decoded_len);
     if (buffer_mp3 != nullptr)
     {
       int ret = mbedtls_base64_decode(buffer_mp3, expected_decoded_len, &decoded_bytes_written, (uint8_t *)buffer_base64, min(total, buffer_size_base64));
@@ -203,8 +207,8 @@ void onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessagePrope
       {
         LOG_DEBUG("Base64 decoding SUCCESS");
         LOG_DEBUG("expected_decoded_len:%d, decoded_bytes_written:%d\n", expected_decoded_len, decoded_bytes_written);
-        audio_data.setValue((uint8_t *)buffer_mp3, min(total, buffer_size_orig));
-        audio_data.resize(min(total, buffer_size_orig));
+        audio_data.setValue((uint8_t *)buffer_mp3, decoded_bytes_written); // copy only the bytes that are written
+        audio_data.resize(decoded_bytes_written);                          // resize to that length
         restart_audio();
         should_play = true;
       }

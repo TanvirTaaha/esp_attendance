@@ -35,15 +35,20 @@ extern "C"
 #define ACTIVATE_LOGGING 1
 #include "debug.h"
 
+// I2S pins
 #define DAC_PIN_LRC 13
 #define DAC_PIN_BCLK 12
 #define DAC_PIN_DIN 14
+
+#define VOL_CTRL_INPUT
+extern float vol;
+extern char cmd;
 
 // mqtt
 extern bool is_subscribed;
 void async_mqtt_setup();
 const size_t buffer_size_base64 = 30 * 1024;
-const size_t buffer_size_orig = (buffer_size_base64 * 3) / 4; // for no padding
+const size_t buffer_size_orig = ((buffer_size_base64 + 3) / 4) * 3; // for no padding
 extern char *buffer_base64;
 extern uint8_t *buffer_mp3;
 
@@ -51,6 +56,9 @@ extern uint8_t *buffer_mp3;
 extern volatile bool should_play;
 extern MemoryStream audio_data;
 extern StreamCopy copier;
+extern I2SStream i2s;
+extern VolumeStream volume;
+extern EncodedAudioStream dec;
 void audio_init();
 void restart_audio();
 #endif
