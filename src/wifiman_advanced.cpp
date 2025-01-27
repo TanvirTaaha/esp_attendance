@@ -34,7 +34,7 @@ void wifiman_setup()
 
   pinMode(TRIGGER_PIN, INPUT);
 
-  wm.resetSettings(); // wipe settings
+  // wm.resetSettings(); // wipe settings
 
   if (wm_nonblocking)
     wm.setConfigPortalBlocking(false);
