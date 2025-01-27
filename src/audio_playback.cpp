@@ -46,7 +46,7 @@ void audio_init()
   vcfg.copyFrom(cfg);
   vcfg.allow_boost = true;
   volume.begin(vcfg);
-  vol = 0.2;
+  vol = 3.0;
   volume.setVolume(vol);
 
   dec.begin(audio_info);
