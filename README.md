@@ -4,7 +4,6 @@
 - Message is sent by MQTT protocol
 - Can play upto 25MB of mp3 audio
 
-
 | Agenda   | Status |
 | -------- | ------- |
 | Playing audio with speaker  | 🚀 Works |
@@ -12,7 +11,7 @@
 | Sending Data over MQTT | 🚀 Works |
 | Incorporate ESP32 mutli-core for networking and playing parallely | ⏳ Won't work with mqtt |
 | Receiving whole audio over MQTT and playback | 🚀 Works |
-
+| Volume level is persistant across reboots | 🚀 Works |
 
 | Future plans   | Importance |
 | -------- | ------- |
