@@ -171,6 +171,7 @@ void onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessagePrope
   Serial.println(total);
 #endif
   payload[len] = '\0';
+
   // LOG_DEBUG("Received message:%s", payload);
   if (buffer_base64 == nullptr || buffer_mp3 == nullptr)
   {
@@ -249,7 +250,7 @@ void async_mqtt_setup()
   mqttClient.onPublish(onMqttPublish);
 
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
-
+  mqttClient.setClientId("ESP");
   // connectToWifi();
   wifiman_setup();
 

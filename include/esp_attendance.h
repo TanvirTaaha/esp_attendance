@@ -16,6 +16,9 @@
 #include <Arduino.h>
 #include <mbedtls/base64.h>
 
+// persistence
+#include <EEPROM.h>
+
 // AsyncMQTT
 #include <WiFi.h>
 
@@ -71,4 +74,14 @@ extern VolumeStream volume;
 extern EncodedAudioStream dec;
 void audio_init();
 void restart_audio();
+
+// persistence
+const size_t EEPROM_SIZE = 64; // unit: byte
+const size_t EEPROM_ADDR = 0;
+const size_t EEPROM_VOLUME_LEVEL_ADDR = 0;
+void eeprom_setup();
+void eeprom_wirte_str(char *buff, size_t len, size_t addr);
+char *eeprom_read_str(size_t addr);
+void eeprom_write_volume(float vol);
+float eeprom_read_volume();
 #endif

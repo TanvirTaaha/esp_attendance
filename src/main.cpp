@@ -24,6 +24,7 @@ void setup()
 
   LOG_INFO("\nStarting Attendance Greeter on ESP32-%s", ARDUINO_BOARD);
 
+  eeprom_setup();
   audio_init();
   async_mqtt_setup();
   LOG_DEBUG("MQTT started.");
@@ -59,6 +60,7 @@ void loop()
       LOG_INFO("Invalid Command, current volume level:%f", vol);
       break;
     }
+    eeprom_write_volume(vol);
   }
 
   if (should_play)

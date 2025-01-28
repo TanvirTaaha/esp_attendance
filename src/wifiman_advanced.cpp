@@ -71,7 +71,7 @@ void wifiman_setup()
   //  wm.setShowDnsFields(true);    // force show dns field always
 
   // wm.setConnectTimeout(20); // how long to try to connect for before continuing
-  wm.setConfigPortalTimeout(30); // auto close configportal after n seconds
+  wm.setConfigPortalTimeout(300); // auto close configportal after n seconds
   // wm.setCaptivePortalEnable(false); // disable captive portal redirection
   // wm.setAPClientCheck(true); // avoid timeout if client connected to softap
 

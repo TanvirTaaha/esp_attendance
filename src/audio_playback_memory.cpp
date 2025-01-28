@@ -26,6 +26,7 @@ auto vcfg = volume.defaultConfig();
 // Need to be called after Serial.begin(Baud);
 void audio_init()
 {
+  LOG_DEBUG("in audio_init()");
 #if (CURRENT_LOG_LEVEL >= ATTENDACE_LOG_LEVEL_ERROR) && ACTIVATE_LOGGING
   AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Error);
 #endif
@@ -41,15 +42,23 @@ void audio_init()
   // cfg.sample_rate = 44100;
   // cfg.channels = memoryStream.audioInfo().channels;
   i2s.begin(cfg);
+  dec.begin(audio_info);
 
   // Voluime setup
   vcfg.copyFrom(cfg);
+  vol = eeprom_read_volume();
+  // if no volume is present
+  if (vol <= 0.0f || vol >= 100.0f || isnanf(vol) || isinff(vol))
+  {
+    LOG_WARN("Invalid volume on eeprom:%f", vol);
+    vol = 1.0;
+    eeprom_write_volume(vol);
+  }
+  vcfg.volume = vol;
   vcfg.allow_boost = true;
-  volume.begin(vcfg);
-  vol = 3.0;
+  volume.begin(vcfg); // Have to be the last to begin()
   volume.setVolume(vol);
 
-  dec.begin(audio_info);
   LOG_INFO("Audio started");
 }
 
@@ -71,13 +80,14 @@ void restart_audio()
   LOG_DEBUG("After delay 100");
   i2s.begin(cfg);
   LOG_DEBUG("After i2s begin");
+  vcfg.volume = vol;
   vcfg.allow_boost = true;
-  volume.begin(vcfg);
-  volume.setVolume(vol);
   LOG_DEBUG("After volume begin:volume:%f", vol);
   dec.begin(audio_info);
   LOG_DEBUG("After dec begin");
   copier.begin(dec, audio_data);
   LOG_DEBUG("After copier begin");
   LOG_DEBUG("Audio RESTARTED");
+  volume.begin(vcfg); // Have to be the last to begin()
+  volume.setVolume(vol);
 }
