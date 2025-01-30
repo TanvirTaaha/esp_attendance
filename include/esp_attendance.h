@@ -67,7 +67,8 @@ extern uint8_t *buffer_mp3;
 
 // audio playback
 extern volatile bool should_play;
-extern MemoryStream audio_data;
+extern String mp3_url;
+extern URLStream url_stream;
 extern StreamCopy copier;
 extern I2SStream i2s;
 extern VolumeStream volume;

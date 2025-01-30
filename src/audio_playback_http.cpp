@@ -11,17 +11,20 @@
 
 #include "esp_attendance.h"
 AudioInfo audio_info(44100, 1, 16);
-MemoryStream audio_data = MemoryStream(buffer_mp3, buffer_size_orig);
+// MemoryStream audio_data = MemoryStream(buffer_mp3, buffer_size_orig);
+URLStream url_stream;
 I2SStream i2s;
 VolumeStream volume(i2s);
 EncodedAudioStream dec(&volume, new MP3DecoderHelix());
-StreamCopy copier(dec, audio_data, AUDIO_COPIER_BUFFER_SIZE);
+StreamCopy copier(dec, url_stream, AUDIO_COPIER_BUFFER_SIZE);
 
 volatile bool should_play = false;
 
 // for access from restart function
 auto cfg = i2s.defaultConfig(TX_MODE);
 auto vcfg = volume.defaultConfig();
+
+String mp3_url = "http://192.168.21.35/";
 
 // Need to be called after Serial.begin(Baud);
 void audio_init()
@@ -60,6 +63,7 @@ void restart_audio()
 
   should_play = false;
 
+  url_stream.end();
   dec.flush();
   dec.end(); // Have to be called before it's downstreams ended
   LOG_DEBUG("After dec end");
@@ -79,7 +83,8 @@ void restart_audio()
   LOG_DEBUG("After volume begin:volume:%f", vol);
   dec.begin(audio_info);
   LOG_DEBUG("After dec begin");
-  copier.begin(dec, audio_data);
+  url_stream.begin(mp3_url.c_str(), "audio/mp3");
+  copier.begin(dec, url_stream);
   LOG_DEBUG("After copier begin");
   LOG_DEBUG("Audio RESTARTED");
 }
