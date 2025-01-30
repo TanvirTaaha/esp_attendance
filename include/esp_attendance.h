@@ -42,7 +42,7 @@ extern "C"
 #include "debug.h"
 
 // I2S pins
-#define DAC_PIN_LRC 13
+#define DAC_PIN_LRC 27
 #define DAC_PIN_BCLK 12
 #define DAC_PIN_DIN 14
 
@@ -56,7 +56,7 @@ extern char cmd;
 void wifiman_setup();
 void wifiman_loop();
 
-// mqtt
+// mqtt77
 extern bool is_subscribed;
 void async_mqtt_setup();
 void connectToMqtt();
