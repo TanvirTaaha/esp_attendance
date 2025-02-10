@@ -16,25 +16,21 @@
 #include <Arduino.h>
 #include <mbedtls/base64.h>
 
-// persistence
-#include <EEPROM.h>
-
-// AsyncMQTT
-#include <WiFi.h>
-
-extern "C"
-{
+extern "C" {
 #include "freertos/FreeRTOS.h"
 #include "freertos/timers.h"
 }
 
+// AsyncMQTT
+#include <WiFi.h>
 // WifiMan
 #include <WiFiManager.h>
-
 // Audio Playback
 #include <AudioTools.h>
-#include "AudioTools/AudioCodecs/CodecMP3Helix.h"
+#include <AudioTools/AudioCodecs/CodecMP3Helix.h>
 #include <AudioTools/Concurrency/RTOS.h>
+// persistence
+#include <EEPROM.h>
 
 // Global switch to enable/disable all debug logging
 // Have to define before importing
@@ -56,19 +52,17 @@ extern char cmd;
 void wifiman_setup();
 void wifiman_loop();
 
-// mqtt77
+// mqtt
 extern bool is_subscribed;
 void async_mqtt_setup();
 void connectToMqtt();
-const size_t buffer_size_base64 = 35 * 1024;
-const size_t buffer_size_orig = ((buffer_size_base64 + 3) / 4) * 3; // for no padding
-extern char *buffer_base64;
+void publish_ack(const char *msg);
+const size_t max_mp3_buffer_size = 35 * 1024;
 extern uint8_t *buffer_mp3;
 
 // audio playback
 extern volatile bool should_play;
-extern String mp3_url;
-extern URLStream url_stream;
+extern MemoryStream audio_data;
 extern StreamCopy copier;
 extern I2SStream i2s;
 extern VolumeStream volume;
@@ -77,12 +71,14 @@ void audio_init();
 void restart_audio();
 
 // persistence
-const size_t EEPROM_SIZE = 64; // unit: byte
-const size_t EEPROM_ADDR = 0;
-const size_t EEPROM_VOLUME_LEVEL_ADDR = 0;
+const int EEPROM_SIZE = 100;                  // unit: bytes
+const int EEPROM_CREDS_ADDR = sizeof(float);  // After the sizeof(float) from starting
+const int EEPROM_VOLUME_LEVEL_ADDR = 0;
 void eeprom_setup();
-void eeprom_wirte_str(char *buff, size_t len, size_t addr);
-char *eeprom_read_str(size_t addr);
+void eeprom_wirte_str(char *buff, int len, int addr);
+char *eeprom_read_str(int addr);
 void eeprom_write_volume(float vol);
 float eeprom_read_volume();
+void eeprom_write_creds();
+void eeprom_read_creds();
 #endif

@@ -18,15 +18,32 @@
 #define WIFI_SSID "MISINFRA"
 #define WIFI_PASSWORD "123456#@227"
 
-// #define MQTT_HOST IPAddress(192, 168, 21, 44) // taaha
-#define MQTT_HOST IPAddress(192, 168, 21, 35) // gpuserver2x
+#define MQTT_HOST IPAddress(192, 168, 21, 44)  // taaha
+// #define MQTT_HOST IPAddress(192, 168, 142, 126) // taaha on Taaha's Pixel
+// #define MQTT_HOST IPAddress(192, 168, 21, 35)  // gpuserver2x
+// #define MQTT_HOST IPAddress(192, 168, 142, 111)  // gpuserver2x on Taaha's Pixel
 // #define MQTT_HOST "broker.emqx.io" // Broker address
 #define MQTT_PORT 1883
 
 #define MQTT_QOS 2
 
-const char *PubTopic = "streams/audio"; // Topic to publish
+#define MQTT_TOPIC_BASE "FaceRecognition/potpot/"
+extern char mqtt_topic[33];      // topic structure "FaceRecognition/potpot/" + "<uint32 in decimal>"
+extern char mqtt_topic_ack[37];  // topic structure "FaceRecognition/potpot/" + "<uint32 in decimal>" + "/ack"
 
-// chunk sizes
-
+struct MqttPayloadStruct {
+  uint32_t msg_id;
+  uint32_t stuff_id;
+  uint32_t file_size;
+  uint32_t checksum;
+  uint64_t timestamp;
+};
+extern MqttPayloadStruct mqtt_payload_struct;
+struct CredentialStruct {
+  uint32_t device_id;
+  char device_pass[16];
+  char mqtt_pass[16];
+  char mqtt_username[20];
+};
+extern CredentialStruct credential_struct;
 #endif

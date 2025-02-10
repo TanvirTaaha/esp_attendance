@@ -11,7 +11,7 @@
 
 #include "esp_attendance.h"
 AudioInfo audio_info(44100, 1, 16);
-MemoryStream audio_data = MemoryStream(buffer_mp3, buffer_size_orig);
+MemoryStream audio_data = MemoryStream(buffer_mp3, max_mp3_buffer_size);
 I2SStream i2s;
 VolumeStream volume(i2s);
 EncodedAudioStream dec(&volume, new MP3DecoderHelix());
@@ -24,8 +24,7 @@ auto cfg = i2s.defaultConfig(TX_MODE);
 auto vcfg = volume.defaultConfig();
 
 // Need to be called after Serial.begin(Baud);
-void audio_init()
-{
+void audio_init() {
   LOG_DEBUG("in audio_init()");
 #if (CURRENT_LOG_LEVEL >= ATTENDACE_LOG_LEVEL_ERROR) && ACTIVATE_LOGGING
   AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Error);
@@ -48,28 +47,26 @@ void audio_init()
   vcfg.copyFrom(cfg);
   vol = eeprom_read_volume();
   // if no volume is present
-  if (vol <= 0.0f || vol >= 100.0f || isnanf(vol) || isinff(vol))
-  {
+  if (vol <= 0.0f || vol >= 100.0f || isnanf(vol) || isinff(vol)) {
     LOG_WARN("Invalid volume on eeprom:%f", vol);
     vol = 1.0;
     eeprom_write_volume(vol);
   }
   vcfg.volume = vol;
   vcfg.allow_boost = true;
-  volume.begin(vcfg); // Have to be the last to begin()
+  volume.begin(vcfg);  // Have to be the last to begin()
   volume.setVolume(vol);
 
   LOG_INFO("Audio started");
 }
 
-void restart_audio()
-{
+void restart_audio() {
   LOG_DEBUG("Restarting audio-tools");
 
   should_play = false;
 
   dec.flush();
-  dec.end(); // Have to be called before it's downstreams ended
+  dec.end();  // Have to be called before it's downstreams ended
   LOG_DEBUG("After dec end");
   i2s.end();
   volume.end();
@@ -88,6 +85,6 @@ void restart_audio()
   copier.begin(dec, audio_data);
   LOG_DEBUG("After copier begin");
   LOG_DEBUG("Audio RESTARTED");
-  volume.begin(vcfg); // Have to be the last to begin()
+  volume.begin(vcfg);  // Have to be the last to begin()
   volume.setVolume(vol);
 }

@@ -26,8 +26,8 @@ void setup()
 
   eeprom_setup();
   audio_init();
+  
   async_mqtt_setup();
-  LOG_DEBUG("MQTT started.");
 }
 
 void loop()

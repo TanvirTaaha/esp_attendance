@@ -10,22 +10,29 @@
  */
 
 #include "esp_attendance.h"
+#include "mqtt_defines.h"
 
-void eeprom_setup()
-{
+void eeprom_setup() {
   LOG_DEBUG("in eeprom_setup()");
-  if (!EEPROM.begin(EEPROM_SIZE))
-  {
+  if (!EEPROM.begin(EEPROM_SIZE)) {
     Serial.println("failed to init EEPROM");
   }
 }
 
+void eeprom_write_creds() {
+  EEPROM.writeBytes(EEPROM_CREDS_ADDR, &credential_struct, sizeof(CredentialStruct));
+  EEPROM.commit();
+  LOG_DEBUG("Writing credentials to EEPROM");
+}
+
+void eeprom_read_creds() {
+  EEPROM.readBytes(EEPROM_CREDS_ADDR, (void*)&credential_struct, sizeof(CredentialStruct));
+}
+
 // writing byte-by-byte to EEPROM
-void eeprom_wirte_str(char *buff, size_t len, size_t strart_addr = EEPROM_ADDR)
-{
-  size_t end = min(len, EEPROM_SIZE - strart_addr);
-  for (size_t i = 0; i < end; i++)
-  {
+void eeprom_wirte_str(char *buff, int len, int strart_addr) {
+  int end = min(len, EEPROM_SIZE - strart_addr);
+  for (int i = 0; i < end; i++) {
     EEPROM.write(strart_addr++, buff[i]);
   }
   EEPROM.commit();
@@ -33,15 +40,12 @@ void eeprom_wirte_str(char *buff, size_t len, size_t strart_addr = EEPROM_ADDR)
 }
 
 // reading byte-by-byte from EEPROM
-String eeprom_read_string(size_t addr)
-{
+String eeprom_read_string(int addr) {
   String ret;
-  for (int i = 0; i < EEPROM_SIZE; i++)
-  {
+  for (int i = 0; i < EEPROM_SIZE; i++) {
     byte readValue = EEPROM.read(i);
     // If null character
-    if (readValue == 0)
-    {
+    if (readValue == 0) {
       break;
     }
 
@@ -50,15 +54,13 @@ String eeprom_read_string(size_t addr)
   return ret;
 }
 
-void eeprom_write_volume(float vol)
-{
+void eeprom_write_volume(float vol) {
   EEPROM.writeFloat(EEPROM_VOLUME_LEVEL_ADDR, vol);
   EEPROM.commit();
   LOG_DEBUG("Written vol:%f to EEPROM", vol);
 }
 
-float eeprom_read_volume()
-{
+float eeprom_read_volume() {
   float f = EEPROM.readFloat(EEPROM_VOLUME_LEVEL_ADDR);
   LOG_DEBUG("Reading vol:%f from EEPROM", f);
   return f;
