@@ -15,6 +15,7 @@
 // Workaround to remedy linking issue since AsyncMQTT_ESP.h includes function implementations directly in the header file (AsyncMQTT_ESP32_Impl.h).
 // This makes including the AsyncMQTT_ESP.h file in multiple cpp problematic. Have to sure that never happens.
 #include <AsyncMQTT_ESP32.h>
+
 #include <string>
 
 AsyncMqttClient mqttClient;
@@ -45,7 +46,7 @@ void connectToWifi() {
 void connectToMqtt() {
   eeprom_read_creds();
   print_creds();
-  
+
   sprintf(mqtt_topic, "%s%d", MQTT_TOPIC_BASE, credential_struct.device_id);
   LOG_DEBUG("mqtt_topic:%s", mqtt_topic);
   sprintf(mqtt_topic_ack, "%s/ack", mqtt_topic);
@@ -55,15 +56,10 @@ void connectToMqtt() {
   static char last_will_msg[16];
   sprintf(last_will_msg, "I am dead");
   mqttClient.setWill(last_will_topic, 2, false, last_will_msg, strlen(last_will_msg));
-  
+
   static char client_id_str[10];
   sprintf(client_id_str, "ESP-%d", credential_struct.device_id);
 
-  // static std::string mqtt_uname = credential_struct.mqtt_username;
-  // static std::string mqtt_pass = credential_struct.mqtt_pass;
-  // LOG_DEBUG("string uname:\"%s\", len:%d, pass:\"%s\", len:%d", mqtt_uname.c_str(), mqtt_uname.length(), mqtt_pass.c_str(), mqtt_pass.length());
-  // mqttClient.setCredentials(mqtt_uname.c_str(), mqtt_pass.c_str());
-  // mqttClient.setCredentials("1", "potpot1");
   mqttClient.setCredentials(credential_struct.mqtt_username, credential_struct.mqtt_pass);
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
   mqttClient.setClientId(client_id_str);
@@ -217,12 +213,16 @@ void onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessagePrope
   Serial.println(total);
 #endif
 
-  // LOG_DEBUG("Received message:%s", payload);
+  LOG_DEBUG("Received message:%s", payload);
+  payload[len - 1] = '\0';  // remove newline character
 
   if (strstr(topic, mqtt_topic)) {
     if (len == total && len > sizeof(MqttPayloadStruct)) {
-      memcpy(&mqtt_payload_struct, payload, len);
+      int ret = sscanf(payload, "%u_%llu_%u_%u_%u\n\0", &mqtt_payload_struct.msg_id, &mqtt_payload_struct.timestamp, &mqtt_payload_struct.stuff_id, &mqtt_payload_struct.file_size, &mqtt_payload_struct.checksum);
       LOG_INFO("msg_id:%u, timestamp:%llu, stuff_id:%u, file_size:%u, checksum:%u", mqtt_payload_struct.msg_id, mqtt_payload_struct.timestamp, mqtt_payload_struct.stuff_id, mqtt_payload_struct.file_size, mqtt_payload_struct.checksum);
+      if (ret == 5) {
+        LOG_DEBUG("parsing SUCCESS");
+      }
     }
   }
 }
