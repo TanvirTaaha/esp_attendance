@@ -51,8 +51,8 @@ extern "C" {
 #define VOL_CTRL_INPUT
 extern float vol;
 extern char cmd;
-#define DELAY_AFTER_COPY_ENDED 2000
 #define AUDIO_COPIER_BUFFER_SIZE 2048
+#define PING_TIME 1800000  // units: milliseconds
 
 // wifiman
 void wifiman_setup();

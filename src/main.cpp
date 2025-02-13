@@ -66,4 +66,10 @@ void loop() {
     // restart_audio(); // will be called before playing next audio
     publish_ack("MAIN:audio successfully played completely");
   }
+
+  static unsigned long last_ping = millis();
+  if ((millis() - last_ping) > PING_TIME) {
+    publish_ack("MAIN:ping");
+    last_ping = millis();
+  }
 }
