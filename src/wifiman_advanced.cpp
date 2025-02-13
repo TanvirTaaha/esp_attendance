@@ -27,7 +27,9 @@ String getParam(String name);
 
 void wifiman_setup() {
   WiFi.mode(WIFI_STA);  // explicitly set mode, esp defaults to STA+AP
-  Serial.setDebugOutput(ACTIVATE_LOGGING);
+#ifdef ACTIVATE_LOGGING
+  Serial.setDebugOutput(true);
+#endif
   delay(3000);
   Serial.println("\n Starting WifiMan");
 
@@ -141,11 +143,11 @@ String getParam(String name) {
 }
 
 void saveParamCallback() {
-  LOG_DEBUG("[CALLBACK] saveParamCallback fired");
-  LOG_DEBUG("PARAM device_id = %s", getParam("device_id").c_str());
-  LOG_DEBUG("PARAM device_pass = %s", getParam("device_pass").c_str());
-  LOG_DEBUG("PARAM mqtt_username = %s", getParam("mqtt_username").c_str());
-  LOG_DEBUG("PARAM mqtt_pass = %s", getParam("mqtt_pass").c_str());
+  // LOG_DEBUG("[CALLBACK] saveParamCallback fired");
+  // LOG_DEBUG("PARAM device_id = %s", getParam("device_id").c_str());
+  // LOG_DEBUG("PARAM device_pass = %s", getParam("device_pass").c_str());
+  // LOG_DEBUG("PARAM mqtt_username = %s", getParam("mqtt_username").c_str());
+  // LOG_DEBUG("PARAM mqtt_pass = %s", getParam("mqtt_pass").c_str());
 
   credential_struct.device_id = getParam("device_id").toInt();
   strcpy(credential_struct.device_pass, getParam("device_pass").c_str());

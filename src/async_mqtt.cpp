@@ -53,13 +53,14 @@ void connectToMqtt() {
 
   static char last_will_topic[38];
   sprintf(last_will_topic, "%s/will", mqtt_topic);
-  static char last_will_msg[16];
-  sprintf(last_will_msg, "I am dead");
-  mqttClient.setWill(last_will_topic, 2, false, last_will_msg, strlen(last_will_msg));
+  static char last_will_msg[] = "Diconnected more than 60 seconds before\0";
+  // sprintf(last_will_msg, "Diconnected more than 60 seconds before\0");
 
   static char client_id_str[10];
   sprintf(client_id_str, "ESP-%d", credential_struct.device_id);
 
+  mqttClient.setWill(last_will_topic, 2, false, last_will_msg, strlen(last_will_msg));
+  mqttClient.setKeepAlive(60);
   mqttClient.setCredentials(credential_struct.mqtt_username, credential_struct.mqtt_pass);
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
   mqttClient.setClientId(client_id_str);
@@ -185,6 +186,9 @@ void onMqttSubscribe(const uint16_t &packetId, const uint8_t &qos) {
   is_subscribed = true;
   LOG_INFO("Subscribe acknowledged.");
   LOG_DEBUG("  packetId: %d\n  qos: %d", packetId, qos);
+#if (CURRENT_LOG_LEVEL >= ATTENDACE_LOG_LEVEL_DEBUG) && ACTIVATE_LOGGING
+  printSeparationLine();
+#endif
 }
 
 void onMqttUnsubscribe(const uint16_t &packetId) {
@@ -199,29 +203,38 @@ void onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessagePrope
 #if (CURRENT_LOG_LEVEL >= ATTENDACE_LOG_LEVEL_DEBUG) && ACTIVATE_LOGGING
   Serial.print("  topic: ");
   Serial.println(topic);
-  Serial.print("  qos: ");
-  Serial.println(properties.qos);
-  Serial.print("  dup: ");
-  Serial.println(properties.dup);
-  Serial.print("  retain: ");
-  Serial.println(properties.retain);
-  Serial.print("  len: ");
-  Serial.println(len);
-  Serial.print("  index: ");
-  Serial.println(index);
-  Serial.print("  total: ");
-  Serial.println(total);
+  // Serial.print("  qos: ");
+  // Serial.println(properties.qos);
+  // Serial.print("  dup: ");
+  // Serial.println(properties.dup);
+  // Serial.print("  retain: ");
+  // Serial.println(properties.retain);
+  // Serial.print("  len: ");
+  // Serial.println(len);
+  // Serial.print("  index: ");
+  // Serial.println(index);
+  // Serial.print("  total: ");
+  // Serial.println(total);
 #endif
 
   LOG_DEBUG("Received message:%s", payload);
-  payload[len - 1] = '\0';  // remove newline character
+  payload[len - 1] = '\0';  // Ensure null-termination
 
   if (strstr(topic, mqtt_topic)) {
-    if (len == total && len > sizeof(MqttPayloadStruct)) {
+    if (len == total) {
       int ret = sscanf(payload, "%u_%llu_%u_%u_%u\n\0", &mqtt_payload_struct.msg_id, &mqtt_payload_struct.timestamp, &mqtt_payload_struct.stuff_id, &mqtt_payload_struct.file_size, &mqtt_payload_struct.checksum);
       LOG_INFO("msg_id:%u, timestamp:%llu, stuff_id:%u, file_size:%u, checksum:%u", mqtt_payload_struct.msg_id, mqtt_payload_struct.timestamp, mqtt_payload_struct.stuff_id, mqtt_payload_struct.file_size, mqtt_payload_struct.checksum);
       if (ret == 5) {
         LOG_DEBUG("parsing SUCCESS");
+        if (downloadAndVerify(mqtt_payload_struct.checksum)) {
+          audio_data.setValue((uint8_t *)buffer_mp3, mqtt_payload_struct.file_size);
+          audio_data.resize(mqtt_payload_struct.file_size);
+          restart_audio();
+          should_play = true;
+        } 
+      } else {
+        LOG_ERROR("mqtt message parsing FAILED");
+        publish_ack("MQTT:Parsing failed from mqtt payload");
       }
     }
   }
@@ -229,7 +242,7 @@ void onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessagePrope
 
 void onMqttPublish(const uint16_t &packetId) {
   LOG_INFO("Publish acknowledged.");
-  LOG_DEBUG("  packetId: %d", packetId);
+  // LOG_DEBUG("  packetId: %d", packetId);
 }
 
 void async_mqtt_setup() {
@@ -248,16 +261,12 @@ void async_mqtt_setup() {
   mqttClient.onMessage(onMqttMessage);
   mqttClient.onPublish(onMqttPublish);
 
-  // mqttClient.setCredentials("1", "potpot1");
-  // mqttClient.setServer(MQTT_HOST, MQTT_PORT);
-  // mqttClient.setClientId("ESP");
-
   wifiman_setup();
 
   buffer_mp3 = (uint8_t *)malloc(max_mp3_buffer_size + 1);  // 1 extra to avoid overflow
 }
 
 void publish_ack(const char *msg) {
-  uint16_t packetIdPub2 = mqttClient.publish(mqtt_topic_ack, 2, false, msg);
-  LOG_INFO("Publishing ack at QoS 2, packetId: %d, msg:%s", packetIdPub2, msg);
+  uint16_t packetIdPub2 = mqttClient.publish(mqtt_topic_ack, MQTT_QOS, false, msg, strlen(msg));
+  // LOG_INFO("Publishing ack at QoS 2, packetId: %d, msg:%s", packetIdPub2, msg);
 }

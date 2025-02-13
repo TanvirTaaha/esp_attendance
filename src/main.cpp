@@ -14,8 +14,7 @@
 float vol = 0.0;
 char cmd;
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
   while (!Serial && millis() < 2000)
     Serial.print(".");
@@ -26,48 +25,45 @@ void setup()
 
   eeprom_setup();
   audio_init();
-  
+
   async_mqtt_setup();
 }
 
-void loop()
-{
+void loop() {
 #if (CURRENT_LOG_LEVEL >= ATTENDACE_LOG_LEVEL_DEBUG) && ACTIVATE_LOGGING
   static unsigned long last_millis = millis();
-  if ((millis() - last_millis) > 5000)
-  {
+  if ((millis() - last_millis) > 5000) {
     Serial.printf("main loop. subscribed:%s\n", is_subscribed ? "true" : "false");
     last_millis = millis();
   }
 #endif
 
-  if (Serial.available() > 0)
-  {
+  if (Serial.available() > 0) {
     cmd = Serial.read();
-    switch (cmd)
-    {
-    case 'V':
-      vol += 0.02;
-      volume.setVolume(vol);
-      LOG_INFO("Volume level increased to: %f", vol);
-      break;
-    case 'v':
-      vol -= 0.02;
-      volume.setVolume(vol);
-      LOG_INFO("Volume level decreased to: %f", vol);
-      break;
-    default:
-      LOG_INFO("Invalid Command, current volume level:%f", vol);
-      break;
+    switch (cmd) {
+      case 'V':
+        vol += 0.02;
+        volume.setVolume(vol);
+        // LOG_INFO("Volume level increased to: %f", vol);
+        break;
+      case 'v':
+        vol -= 0.02;
+        volume.setVolume(vol);
+        // LOG_INFO("Volume level decreased to: %f", vol);
+        break;
+      default:
+        // LOG_INFO("Invalid Command, current volume level:%f", vol);
+        break;
     }
     eeprom_write_volume(vol);
   }
 
-  if (should_play)
-  {
+  if (should_play) {
+    should_play = false;
     copier.copyAll();
     dec.writeSilence(1000);
     copier.copyAll();
-    restart_audio();
+    // restart_audio(); // will be called before playing next audio
+    publish_ack("MAIN:audio successfully played completely");
   }
 }

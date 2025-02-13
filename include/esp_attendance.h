@@ -31,6 +31,12 @@ extern "C" {
 #include <AudioTools/Concurrency/RTOS.h>
 // persistence
 #include <EEPROM.h>
+// crc & http downloader
+#include "HTTPClient.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
+#include "freertos/semphr.h"
+#include "freertos/task.h"
 
 // Global switch to enable/disable all debug logging
 // Have to define before importing
@@ -81,4 +87,8 @@ void eeprom_write_volume(float vol);
 float eeprom_read_volume();
 void eeprom_write_creds();
 void eeprom_read_creds();
+
+// crc & http downloader
+bool downloadAndVerify(uint32_t expectedChecksum);
+
 #endif
