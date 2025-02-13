@@ -12,11 +12,12 @@
 | Incorporate ESP32 mutli-core for networking and playing parallely | ⏳ Won't work with mqtt |
 | Receiving whole audio over MQTT and playback | 🚀 Works |
 | Volume level is persistant across reboots | 🚀 Works |
+| Receiving audio over HTTP to reduce latency | 🚀 Works |
+| Adding authentication | 🚀 Works |
+| Wifimanager configuration | 🚀 Works |
 
 | Future plans   | Importance |
 | -------- | ------- |
-| Receiving audio over HTTP to reduce latency | High |
-| Adding authentication | High |
 | Handling multiple audio and playback | Medium |
 | Being able to configure over the air | High |
 | Improve audio quality using the features of arduino-audio-tools | Low |
