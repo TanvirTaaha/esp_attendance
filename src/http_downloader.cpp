@@ -92,6 +92,7 @@ bool downloadAndVerify(uint32_t expectedChecksum) {
       publish_ack("HTTP:File size mismatch with mqtt payload");
       return false;
     }
+    yield();
     WiFiClient* stream = http.getStreamPtr();
     size_t totalBytesRead = 0;
     if (buffer_mp3 == nullptr) {
@@ -101,6 +102,7 @@ bool downloadAndVerify(uint32_t expectedChecksum) {
       size_t bytesAvailable = stream->available();
 
       if (bytesAvailable) {
+        yield();
         size_t bytesToRead = min(bytesAvailable, sizeof(chunk.buffer));
         chunk.length = stream->readBytes(chunk.buffer, bytesToRead);
         chunk.isLast = false;
@@ -119,7 +121,7 @@ bool downloadAndVerify(uint32_t expectedChecksum) {
     chunk.length = 0;
     chunk.isLast = true;
     xQueueSend(chunkQueue, &chunk, portMAX_DELAY);
-
+    yield();
     // Wait for CRC processing to complete
     if (xSemaphoreTake(crcDoneSemaphore, pdMS_TO_TICKS(5000)) == pdTRUE) {
       success = (finalChecksum == expectedChecksum);
@@ -127,6 +129,7 @@ bool downloadAndVerify(uint32_t expectedChecksum) {
       LOG_DEBUG("Calculated checksum: 0x%08x\n", finalChecksum);
       LOG_DEBUG("Expected checksum: 0x%08x\n", expectedChecksum);
       LOG_INFO("Checksum verification: %s\n", success ? "PASSED" : "FAILED");
+      yield();
       if (success)
         publish_ack("HTTP:received and checksum matched");
       else
@@ -136,6 +139,7 @@ bool downloadAndVerify(uint32_t expectedChecksum) {
       publish_ack("HTTP:Timeout waiting for CRC calculation");
     }
   } else {
+    yield();
     LOG_ERROR("HTTP GET failed, error: %d\n", httpCode);
     String error_msg = "HTTP:GET failed, error: " + String(httpCode);
     publish_ack(error_msg.c_str());

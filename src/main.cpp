@@ -60,13 +60,15 @@ void loop() {
 
   if (should_play) {
     should_play = false;
+    yield();
     copier.copyAll();
     dec.writeSilence(1000);
+    yield();
     copier.copyAll();
     // restart_audio(); // will be called before playing next audio
     publish_ack("MAIN:audio successfully played completely");
   }
-
+  yield();
   static unsigned long last_ping = millis();
   if ((millis() - last_ping) > PING_TIME) {
     publish_ack("MAIN:ping");

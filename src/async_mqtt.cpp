@@ -221,11 +221,13 @@ void onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessagePrope
   payload[len - 1] = '\0';  // Ensure null-termination
 
   if (strstr(topic, mqtt_topic)) {
+    yield();
     if (len == total) {
       int ret = sscanf(payload, "%u_%llu_%u_%u_%u\n\0", &mqtt_payload_struct.msg_id, &mqtt_payload_struct.timestamp, &mqtt_payload_struct.stuff_id, &mqtt_payload_struct.file_size, &mqtt_payload_struct.checksum);
       LOG_INFO("msg_id:%u, timestamp:%llu, stuff_id:%u, file_size:%u, checksum:%u", mqtt_payload_struct.msg_id, mqtt_payload_struct.timestamp, mqtt_payload_struct.stuff_id, mqtt_payload_struct.file_size, mqtt_payload_struct.checksum);
       if (ret == 5) {
         LOG_DEBUG("parsing SUCCESS");
+        yield();
         if (downloadAndVerify(mqtt_payload_struct.checksum)) {
           audio_data.setValue((uint8_t *)buffer_mp3, mqtt_payload_struct.file_size);
           audio_data.resize(mqtt_payload_struct.file_size);
