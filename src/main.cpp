@@ -67,6 +67,7 @@ void loop() {
     copier.copyAll();
     // restart_audio(); // will be called before playing next audio
     publish_ack("MAIN:audio successfully played completely");
+    restart_audio();
   }
   yield();
   static unsigned long last_ping = millis();
