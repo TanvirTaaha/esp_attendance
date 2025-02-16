@@ -25,6 +25,7 @@ uint32_t calculateCRC32(const uint8_t* data, size_t length) {
 bool downloadAndVerify(uint32_t expectedChecksum) {
   HTTPClient http;
   bool success = false;
+  http.setReuse(true);
 
   char url[100];
   sprintf(url, "http://%d.%d.%d.%d:8000/potpot?device_id=%d&msg_id=%d\0", MQTT_HOST[0], MQTT_HOST[1], MQTT_HOST[2], MQTT_HOST[3], credential_struct.device_id, mqtt_payload_struct.msg_id);
@@ -46,24 +47,28 @@ bool downloadAndVerify(uint32_t expectedChecksum) {
       return false;
     }
     yield();
-    // WiFiClient* stream = http.getStreamPtr();
-    String audio_str = http.getString();
+    WiFiClient* stream = http.getStreamPtr();
     yield();
     if (buffer_mp3 == nullptr) {
       buffer_mp3 = (uint8_t*)malloc(max_mp3_buffer_size);
       yield();
     }
-    uint32_t checksum = calculateCRC32((uint8_t*)audio_str.c_str(), audio_str.length());
+
+    size_t totalBytesRead = stream->readBytes(buffer_mp3, http.getSize());
+    yield();
+
+    uint32_t checksum = calculateCRC32(buffer_mp3, totalBytesRead);
+    yield();
     success = (expectedChecksum == checksum);
-    LOG_DEBUG("Total bytes read: %d\n", audio_str.length());
+    LOG_DEBUG("Total bytes read: %d\n", totalBytesRead);
     LOG_DEBUG("Calculated checksum: 0x%08x\n", checksum);
     LOG_DEBUG("Expected checksum: 0x%08x\n", expectedChecksum);
     LOG_INFO("Checksum verification: %s\n", success ? "PASSED" : "FAILED");
-    yield();
-    if (success)
+    if (success) {
       publish_ack("HTTP:received and checksum matched");
-    else
+    } else {
       publish_ack("HTTP:received but checksum mismatched");
+    }
 
   } else {
     yield();
@@ -74,4 +79,15 @@ bool downloadAndVerify(uint32_t expectedChecksum) {
   yield();
   http.end();
   return success;
+}
+
+void setup_http() {
+  // Initialize with longer timeout
+  esp_task_wdt_init(10, true);
+
+  // Optional: Add specific tasks to watchdog
+  TaskHandle_t asyncTcpTask = xTaskGetHandle("async_tcp");
+  if (asyncTcpTask != NULL) {
+    esp_task_wdt_add(asyncTcpTask);
+  }
 }

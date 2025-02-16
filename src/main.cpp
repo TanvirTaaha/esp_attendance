@@ -27,6 +27,7 @@ void setup() {
   audio_init();
 
   async_mqtt_setup();
+  setup_http();
 }
 
 void loop() {
@@ -59,7 +60,6 @@ void loop() {
   }
 
   if (should_play) {
-    should_play = false;
     yield();
     copier.copyAll();
     dec.writeSilence(1000);
@@ -67,6 +67,7 @@ void loop() {
     copier.copyAll();
     // restart_audio(); // will be called before playing next audio
     publish_ack("MAIN:audio successfully played completely");
+    should_play = false;
   }
   yield();
   static unsigned long last_ping = millis();
