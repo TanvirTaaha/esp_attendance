@@ -148,3 +148,14 @@ bool downloadAndVerify(uint32_t expectedChecksum) {
   http.end();
   return success;
 }
+
+void setup_http() {
+  // Initialize with longer timeout
+  esp_task_wdt_init(10, true);
+
+  // Optional: Add specific tasks to watchdog
+  TaskHandle_t asyncTcpTask = xTaskGetHandle("async_tcp");
+  if (asyncTcpTask != NULL) {
+    esp_task_wdt_add(asyncTcpTask);
+  }
+}

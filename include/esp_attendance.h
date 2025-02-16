@@ -90,5 +90,6 @@ void eeprom_read_creds();
 
 // crc & http downloader
 bool downloadAndVerify(uint32_t expectedChecksum);
+void setup_http();
 
 #endif
