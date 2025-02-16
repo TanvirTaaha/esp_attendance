@@ -55,6 +55,7 @@ extern char cmd;
 #define PING_TIME 1800000  // units: milliseconds
 
 // wifiman
+extern bool should_reset_wifiman;
 void wifiman_setup();
 void wifiman_loop();
 
