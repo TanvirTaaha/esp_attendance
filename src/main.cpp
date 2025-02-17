@@ -62,10 +62,7 @@ void loop() {
   if (should_play) {
     yield();
     copier.copyAll();
-    dec.writeSilence(1000);
-    yield();
-    copier.copyAll();
-    // restart_audio(); // will be called before playing next audio
+    restart_audio();
     publish_ack("MAIN:audio successfully played completely");
     should_play = false;
   }

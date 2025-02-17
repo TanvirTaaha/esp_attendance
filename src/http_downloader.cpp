@@ -22,6 +22,14 @@ uint32_t calculateCRC32(const uint8_t* data, size_t length) {
   return ~crc;
 }
 
+inline uint32_t calc_sum(uint8_t* data, size_t length) {
+  int sum = 0;
+  for (size_t i = 0; i < length; i++) {
+    sum += data[i];
+  }
+  return sum;
+}
+
 bool downloadAndVerify(uint32_t expectedChecksum) {
   HTTPClient http;
   bool success = false;
@@ -57,7 +65,8 @@ bool downloadAndVerify(uint32_t expectedChecksum) {
     size_t totalBytesRead = stream->readBytes(buffer_mp3, http.getSize());
     yield();
 
-    uint32_t checksum = calculateCRC32(buffer_mp3, totalBytesRead);
+    // uint32_t checksum = calculateCRC32(buffer_mp3, totalBytesRead);
+    uint32_t checksum = calc_sum(buffer_mp3, totalBytesRead);
     yield();
     success = (expectedChecksum == checksum);
     LOG_DEBUG("Total bytes read: %d\n", totalBytesRead);

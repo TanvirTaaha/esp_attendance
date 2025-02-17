@@ -229,12 +229,11 @@ void onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessagePrope
         LOG_DEBUG("parsing SUCCESS");
         yield();
         while (should_play) {
-          delay(50);
+          delay(10);
         }
         if (downloadAndVerify(mqtt_payload_struct.checksum)) {
           audio_data.setValue((uint8_t *)buffer_mp3, mqtt_payload_struct.file_size);
           audio_data.resize(mqtt_payload_struct.file_size);
-          restart_audio();
           should_play = true;
         }
       } else {
