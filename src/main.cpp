@@ -68,7 +68,7 @@ void loop() {
   }
   yield();
   static unsigned long last_ping = millis();
-  if ((millis() - last_ping) > PING_TIME) {
+  if ((millis() - last_ping) > ping_time) {
     publish_ack("MAIN:ping");
     last_ping = millis();
   }
