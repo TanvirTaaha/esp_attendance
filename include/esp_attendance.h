@@ -52,7 +52,7 @@ extern "C" {
 extern float vol;
 extern char cmd;
 #define AUDIO_COPIER_BUFFER_SIZE 2048
-const int ping_time = 10 * 60 * 1000;  // units: milliseconds
+const int PING_TIME = 10 * 60 * 1000;  // units: milliseconds
 
 // wifiman
 void wifiman_setup();

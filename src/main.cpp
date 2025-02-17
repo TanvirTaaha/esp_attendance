@@ -68,8 +68,19 @@ void loop() {
   }
   yield();
   static unsigned long last_ping = millis();
-  if ((millis() - last_ping) > ping_time) {
+  if ((millis() - last_ping) > PING_TIME) {
     publish_ack("MAIN:ping");
     last_ping = millis();
+  }
+}
+
+void setup_http() {
+  // Initialize with longer timeout
+  esp_task_wdt_init(10, true);
+
+  // Optional: Add specific tasks to watchdog
+  TaskHandle_t asyncTcpTask = xTaskGetHandle("async_tcp");
+  if (asyncTcpTask != NULL) {
+    esp_task_wdt_add(asyncTcpTask);
   }
 }
