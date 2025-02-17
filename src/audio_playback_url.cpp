@@ -10,12 +10,13 @@
  */
 
 #include "esp_attendance.h"
+#include "mqtt_defines.h"
 AudioInfo audio_info(44100, 1, 16);
-MemoryStream audio_data = MemoryStream(buffer_mp3, max_mp3_buffer_size);
+URLStream url_stream;
 I2SStream i2s;
 VolumeStream volume(i2s);
 EncodedAudioStream dec(&volume, new MP3DecoderHelix());
-StreamCopy copier(dec, audio_data, AUDIO_COPIER_BUFFER_SIZE);
+StreamCopy copier(dec, url_stream, AUDIO_COPIER_BUFFER_SIZE);
 
 volatile bool should_play = false;
 
@@ -60,6 +61,20 @@ void audio_init() {
   LOG_INFO("Audio started");
 }
 
+void start_url() {
+  url_stream.end();
+  char url[100];
+  sprintf(url, "http://%d.%d.%d.%d:8000/potpot?device_id=%d&msg_id=%d\0", MQTT_HOST[0], MQTT_HOST[1], MQTT_HOST[2], MQTT_HOST[3], credential_struct.device_id, mqtt_payload_struct.msg_id);
+
+  if (!url_stream.begin(url, "audio/mp3")) {
+    LOG_ERROR("Failed to start url stream");
+    publish_ack("HTTP:Failed to start url stream");
+  } else {
+    LOG_INFO("URL Stream started");
+    should_play = true;
+  }
+}
+
 void restart_audio() {
   LOG_DEBUG("Restarting audio-tools");
 
@@ -82,7 +97,7 @@ void restart_audio() {
   LOG_DEBUG("After volume begin:volume:%f", vol);
   dec.begin(audio_info);
   LOG_DEBUG("After dec begin");
-  copier.begin(dec, audio_data);
+  copier.begin(dec, url_stream);
   LOG_DEBUG("After copier begin");
   LOG_DEBUG("Audio RESTARTED");
   volume.begin(vcfg);  // Have to be the last to begin()

@@ -227,15 +227,10 @@ void onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessagePrope
       LOG_INFO("msg_id:%u, timestamp:%llu, stuff_id:%u, file_size:%u, checksum:%u", mqtt_payload_struct.msg_id, mqtt_payload_struct.timestamp, mqtt_payload_struct.stuff_id, mqtt_payload_struct.file_size, mqtt_payload_struct.checksum);
       if (ret == 5) {
         LOG_DEBUG("parsing SUCCESS");
-        yield();
         while (should_play) {
           delay(10);
         }
-        if (downloadAndVerify(mqtt_payload_struct.checksum)) {
-          audio_data.setValue((uint8_t *)buffer_mp3, mqtt_payload_struct.file_size);
-          audio_data.resize(mqtt_payload_struct.file_size);
-          should_play = true;
-        }
+        start_url();
       } else {
         LOG_ERROR("mqtt message parsing FAILED");
         publish_ack("MQTT:Parsing failed from mqtt payload");

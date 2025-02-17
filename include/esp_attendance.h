@@ -68,13 +68,14 @@ extern uint8_t *buffer_mp3;
 
 // audio playback
 extern volatile bool should_play;
-extern MemoryStream audio_data;
+extern URLStream url_stream;
 extern StreamCopy copier;
 extern I2SStream i2s;
 extern VolumeStream volume;
 extern EncodedAudioStream dec;
 void audio_init();
 void restart_audio();
+void start_url();
 
 // persistence
 const int EEPROM_SIZE = 100;                  // unit: bytes
