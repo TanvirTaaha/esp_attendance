@@ -73,9 +73,10 @@ extern StreamCopy copier;
 extern I2SStream i2s;
 extern VolumeStream volume;
 extern EncodedAudioStream dec;
+extern QueueHandle_t urlQueue;
 void audio_init();
 void restart_audio();
-void start_url();
+void start_url(const char *url);
 
 // persistence
 const int EEPROM_SIZE = 100;                  // unit: bytes

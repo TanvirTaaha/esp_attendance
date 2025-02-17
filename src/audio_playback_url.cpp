@@ -10,13 +10,18 @@
  */
 
 #include "esp_attendance.h"
-#include "mqtt_defines.h"
+
+const int url_length = 100;
+
 AudioInfo audio_info(44100, 1, 16);
 URLStream url_stream;
 I2SStream i2s;
 VolumeStream volume(i2s);
 EncodedAudioStream dec(&volume, new MP3DecoderHelix());
 StreamCopy copier(dec, url_stream, AUDIO_COPIER_BUFFER_SIZE);
+
+QueueHandle_t urlQueue;
+Task play_task("play_task", 2 * AUDIO_COPIER_BUFFER_SIZE, 1, 0);  // core 0 (background core)
 
 volatile bool should_play = false;
 
@@ -58,20 +63,40 @@ void audio_init() {
   volume.begin(vcfg);  // Have to be the last to begin()
   volume.setVolume(vol);
 
+  // Start backgournd task
+  play_task.begin([&]() {
+    if (urlQueue == NULL) {
+      urlQueue = xQueueCreate(10, url_length);
+    }
+    static char url[url_length];
+    while (true) {
+      if (xQueueReceive(urlQueue, &url, portMAX_DELAY) == pdTRUE) {
+        start_url(url);
+        if (should_play) {
+          // yields are necessary to prevent watchdog reset as it is background task
+          yield();
+          copier.copyAll();
+          yield();
+          restart_audio();
+          publish_ack("MAIN:audio successfully played completely");
+          should_play = false;
+        }
+      }
+    }
+  });
   LOG_INFO("Audio started");
 }
 
-void start_url() {
+void start_url(const char *url) {
   url_stream.end();
-  char url[100];
-  sprintf(url, "http://%d.%d.%d.%d:8000/potpot?device_id=%d&msg_id=%d\0", MQTT_HOST[0], MQTT_HOST[1], MQTT_HOST[2], MQTT_HOST[3], credential_struct.device_id, mqtt_payload_struct.msg_id);
 
-  if (!url_stream.begin(url, "audio/mp3")) {
-    LOG_ERROR("Failed to start url stream");
-    publish_ack("HTTP:Failed to start url stream");
-  } else {
+  if (url_stream.begin(url, "audio/mp3")) {
     LOG_INFO("URL Stream started");
     should_play = true;
+  } else {
+    LOG_ERROR("Failed to start url stream");
+    publish_ack("HTTP:Failed to start url stream");
+    should_play = false;
   }
 }
 

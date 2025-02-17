@@ -230,7 +230,9 @@ void onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessagePrope
         while (should_play) {
           delay(10);
         }
-        start_url();
+        char url[100];
+        sprintf(url, "http://%d.%d.%d.%d:8000/potpot?device_id=%d&msg_id=%d\0", MQTT_HOST[0], MQTT_HOST[1], MQTT_HOST[2], MQTT_HOST[3], credential_struct.device_id, mqtt_payload_struct.msg_id);
+        xQueueSend(urlQueue, &url, portMAX_DELAY);
       } else {
         LOG_ERROR("mqtt message parsing FAILED");
         publish_ack("MQTT:Parsing failed from mqtt payload");
