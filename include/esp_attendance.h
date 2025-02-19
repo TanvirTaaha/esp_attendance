@@ -94,4 +94,9 @@ void eeprom_read_creds();
 bool downloadAndVerify(uint32_t expectedChecksum);
 void setup_http();
 
+// time keeping
+void setupTime();
+long getSecondsSinceBoot();
+String getFormattedTime();
+
 #endif

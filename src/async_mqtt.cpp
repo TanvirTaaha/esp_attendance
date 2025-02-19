@@ -92,7 +92,7 @@ void WiFiEvent(WiFiEvent_t event) {
       Serial.print("IP address: ");
       Serial.println(WiFi.localIP());
 #endif
-
+      setupTime();
       connectToMqtt();
       break;
 
