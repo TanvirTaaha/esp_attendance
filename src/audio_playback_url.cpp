@@ -21,7 +21,7 @@ EncodedAudioStream dec(&volume, new MP3DecoderHelix());
 StreamCopy copier(dec, url_stream, AUDIO_COPIER_BUFFER_SIZE);
 
 QueueHandle_t urlQueue;
-Task play_task("play_task", 2 * AUDIO_COPIER_BUFFER_SIZE, 1, 0);  // core 0 (background core)
+Task play_task("play_task", 4 * AUDIO_COPIER_BUFFER_SIZE, 1, 0);  // core 0 (background core)
 
 volatile bool should_play = false;
 
