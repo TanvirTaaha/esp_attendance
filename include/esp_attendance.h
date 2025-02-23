@@ -52,7 +52,7 @@ extern "C" {
 extern float vol;
 extern char cmd;
 #define AUDIO_COPIER_BUFFER_SIZE 2048
-#define PING_TIME 1800000  // units: milliseconds
+const int PING_TIME = 10 * 60 * 1000;  // units: milliseconds
 
 // wifiman
 extern bool should_reset_wifiman;
@@ -69,13 +69,15 @@ extern uint8_t *buffer_mp3;
 
 // audio playback
 extern volatile bool should_play;
-extern MemoryStream audio_data;
+extern URLStream url_stream;
 extern StreamCopy copier;
 extern I2SStream i2s;
 extern VolumeStream volume;
 extern EncodedAudioStream dec;
+extern QueueHandle_t urlQueue;
 void audio_init();
 void restart_audio();
+void start_url(const char *url);
 
 // persistence
 const int EEPROM_SIZE = 100;                  // unit: bytes
@@ -92,5 +94,10 @@ void eeprom_read_creds();
 // crc & http downloader
 bool downloadAndVerify(uint32_t expectedChecksum);
 void setup_http();
+
+// time keeping
+void setupTime();
+long getSecondsSinceBoot();
+String getFormattedTime();
 
 #endif

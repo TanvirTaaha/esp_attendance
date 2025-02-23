@@ -27,6 +27,7 @@ void setup() {
   audio_init();
 
   async_mqtt_setup();
+  setup_http();
 }
 
 void loop() {
@@ -58,22 +59,21 @@ void loop() {
     eeprom_write_volume(vol);
   }
 
-  if (should_play) {
-    should_play = false;
-    yield();
-    copier.copyAll();
-    dec.writeSilence(1000);
-    yield();
-    copier.copyAll();
-    // restart_audio(); // will be called before playing next audio
-    publish_ack("MAIN:audio successfully played completely");
-    restart_audio();
-  }
-  yield();
   static unsigned long last_ping = millis();
   if ((millis() - last_ping) > PING_TIME) {
     publish_ack("MAIN:ping");
     last_ping = millis();
   }
-  wifiman_loop();
+  yield();
+}
+
+void setup_http() {
+  // Initialize with longer timeout
+  esp_task_wdt_init(10, true);
+
+  // Optional: Add specific tasks to watchdog
+  TaskHandle_t asyncTcpTask = xTaskGetHandle("async_tcp");
+  if (asyncTcpTask != NULL) {
+    esp_task_wdt_add(asyncTcpTask);
+  }
 }

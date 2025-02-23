@@ -92,7 +92,7 @@ void WiFiEvent(WiFiEvent_t event) {
       Serial.print("IP address: ");
       Serial.println(WiFi.localIP());
 #endif
-
+      setupTime();
       connectToMqtt();
       break;
 
@@ -227,13 +227,12 @@ void onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessagePrope
       LOG_INFO("msg_id:%u, timestamp:%llu, stuff_id:%u, file_size:%u, checksum:%u", mqtt_payload_struct.msg_id, mqtt_payload_struct.timestamp, mqtt_payload_struct.stuff_id, mqtt_payload_struct.file_size, mqtt_payload_struct.checksum);
       if (ret == 5) {
         LOG_DEBUG("parsing SUCCESS");
-        yield();
-        if (downloadAndVerify(mqtt_payload_struct.checksum)) {
-          audio_data.setValue((uint8_t *)buffer_mp3, mqtt_payload_struct.file_size);
-          audio_data.resize(mqtt_payload_struct.file_size);
-          // restart_audio();
-          should_play = true;
-        } 
+        while (should_play) {
+          delay(10);
+        }
+        char url[100];
+        sprintf(url, "http://%d.%d.%d.%d:8000/potpot?device_id=%d&msg_id=%d\0", MQTT_HOST[0], MQTT_HOST[1], MQTT_HOST[2], MQTT_HOST[3], credential_struct.device_id, mqtt_payload_struct.msg_id);
+        xQueueSend(urlQueue, &url, portMAX_DELAY);
       } else {
         LOG_ERROR("mqtt message parsing FAILED");
         publish_ack("MQTT:Parsing failed from mqtt payload");
