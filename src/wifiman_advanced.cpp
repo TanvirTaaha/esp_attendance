@@ -30,18 +30,17 @@ void saveParamCallback();
 void checkButton();
 String getParam(String name);
 
-void IRAM_ATTR isr_trigger() {
-  bool current_state = digitalRead(TRIGGER_PIN);
-  unsigned long current_time = millis();
-  if (current_state == LOW || !is_button_active) {
-    pressDownTime = current_time;
-    is_button_active = true;
-  } else {
-    if (current_time - pressDownTime > 3000) {
-      should_reset_wifiman = true;
-      is_button_active = false;
-    }
+void IRAM_ATTR isr_trigger_down() {
+  is_button_active = true;
+  pressDownTime = millis();
+}
+
+void IRAM_ATTR isr_trigger_up() {
+  if ((millis() - pressDownTime) > 3000 && is_button_active) {
+    should_reset_wifiman = true;
   }
+  is_button_active = false;
+  pressDownTime = (1 << sizeof(pressDownTime) * 8) - 1;  // maximum value
 }
 
 // void IRAM_ATTR isr_trigger_up() {
@@ -59,8 +58,9 @@ void wifiman_setup() {
   delay(3000);
   Serial.println("\n Starting WifiMan");
 
-  attachInterrupt(digitalPinToInterrupt(TRIGGER_PIN), isr_trigger, CHANGE);
-  // attachInterrupt(digitalPinToInterrupt(TRIGGER_PIN), isr_trigger_down, RISING);
+  pinMode(TRIGGER_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(TRIGGER_PIN), isr_trigger_down, FALLING);
+  attachInterrupt(digitalPinToInterrupt(TRIGGER_PIN), isr_trigger_up, RISING);
   // wm.resetSettings();  // wipe settings
 
   if (wm_nonblocking)
@@ -96,7 +96,7 @@ void wifiman_setup() {
 
   // set static ip
   //  wm.setSTAStaticIPConfig(IPAddress(10,0,1,99), IPAddress(10,0,1,1), IPAddress(255,255,255,0)); // set static ip,gw,sn
-  //  wm.setShowStaticFields(true); // force show static ip fields
+  //  wm.setShowStaticFields(true); /wm_nonblocking/ force show static ip fields
   //  wm.setShowDnsFields(true);    // force show dns field always
 
   // wm.setConnectTimeout(20); // how long to try to connect for before continuing
@@ -183,6 +183,7 @@ void saveParamCallback() {
 }
 
 void wifiman_loop() {
+  if (wm_nonblocking) wm.process();
   if (should_reset_wifiman) {
     should_reset_wifiman = false;
     Serial.println("Button Held");
@@ -192,4 +193,5 @@ void wifiman_loop() {
     Serial.println("Erased Config, restarting");
     ESP.restart();
   }
+  // LOG_DEBUG("is_button_activate:%s, should_reset_wifiman: %s", is_button_active ? "true" : "false", should_reset_wifiman ? "true" : "false");
 }

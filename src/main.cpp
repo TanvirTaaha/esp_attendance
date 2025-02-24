@@ -64,6 +64,7 @@ void loop() {
     publish_ack("MAIN:ping");
     last_ping = millis();
   }
+  wifiman_loop();
   yield();
 }
 
