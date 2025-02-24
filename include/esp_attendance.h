@@ -55,6 +55,7 @@ extern char cmd;
 const int PING_TIME = 10 * 60 * 1000;  // units: milliseconds
 
 // wifiman
+extern bool should_reset_wifiman;
 void wifiman_setup();
 void wifiman_loop();
 

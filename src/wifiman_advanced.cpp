@@ -21,9 +21,35 @@ bool wm_nonblocking = false;  // change to true to use non blocking
 WiFiManager wm;                     // global wm instance
 WiFiManagerParameter custom_field;  // global param ( for non blocking w params )
 
+// variable to store clicking time
+volatile unsigned long pressDownTime = 0;
+bool should_reset_wifiman = false;
+bool is_button_active = false;
+
 void saveParamCallback();
 void checkButton();
 String getParam(String name);
+
+void IRAM_ATTR isr_trigger() {
+  bool current_state = digitalRead(TRIGGER_PIN);
+  unsigned long current_time = millis();
+  if (current_state == LOW || !is_button_active) {
+    pressDownTime = current_time;
+    is_button_active = true;
+  } else {
+    if (current_time - pressDownTime > 3000) {
+      should_reset_wifiman = true;
+      is_button_active = false;
+    }
+  }
+}
+
+// void IRAM_ATTR isr_trigger_up() {
+//   digitalWrite(LED_BUILTIN, LOW);
+//   if ((millis() - pressDownTime) > 3000) {
+//     should_reset_wifiman = true;
+//   }
+// }
 
 void wifiman_setup() {
   WiFi.mode(WIFI_STA);  // explicitly set mode, esp defaults to STA+AP
@@ -33,8 +59,8 @@ void wifiman_setup() {
   delay(3000);
   Serial.println("\n Starting WifiMan");
 
-  pinMode(TRIGGER_PIN, INPUT);
-
+  attachInterrupt(digitalPinToInterrupt(TRIGGER_PIN), isr_trigger, CHANGE);
+  // attachInterrupt(digitalPinToInterrupt(TRIGGER_PIN), isr_trigger_down, RISING);
   // wm.resetSettings();  // wipe settings
 
   if (wm_nonblocking)
@@ -101,37 +127,37 @@ void wifiman_setup() {
   }
 }
 
-void checkButton() {
-  // check for button press
-  if (digitalRead(TRIGGER_PIN) == LOW) {
-    // poor mans debounce/press-hold, code not ideal for production
-    delay(50);
-    if (digitalRead(TRIGGER_PIN) == LOW) {
-      Serial.println("Button Pressed");
-      // still holding button for 3000 ms, reset settings, code not ideaa for production
-      delay(3000);  // reset delay hold
-      if (digitalRead(TRIGGER_PIN) == LOW) {
-        Serial.println("Button Held");
-        Serial.println("Erasing Config, restarting");
-        wm.resetSettings();
-        ESP.restart();
-      }
+// void checkButton() {
+//   // check for button press
+//   if (digitalRead(TRIGGER_PIN) == LOW) {
+//     // poor mans debounce/press-hold, code not ideal for production
+//     delay(50);
+//     if (digitalRead(TRIGGER_PIN) == LOW) {
+//       Serial.println("Button Pressed");
+//       // still holding button for 3000 ms, reset settings, code not ideaa for production
+//       delay(3000);  // reset delay hold
+//       if (digitalRead(TRIGGER_PIN) == LOW) {
+//         Serial.println("Button Held");
+//         Serial.println("Erasing Config, restarting");
+//         wm.resetSettings();
+//         ESP.restart();
+//       }
 
-      // start portal w delay
-      Serial.println("Starting config portal");
-      wm.setConfigPortalTimeout(120);
+//       // start portal w delay
+//       Serial.println("Starting config portal");
+//       wm.setConfigPortalTimeout(120);
 
-      if (!wm.startConfigPortal("OnDemandAP", "password")) {
-        Serial.println("failed to connect or hit timeout");
-        delay(3000);
-        // ESP.restart();
-      } else {
-        // if you get here you have connected to the WiFi
-        Serial.println("connected...yeey :)");
-      }
-    }
-  }
-}
+//       if (!wm.startConfigPortal("OnDemandAP", "password")) {
+//         Serial.println("failed to connect or hit timeout");
+//         delay(3000);
+//         // ESP.restart();
+//       } else {
+//         // if you get here you have connected to the WiFi
+//         Serial.println("connected...yeey :)");
+//       }
+//     }
+//   }
+// }
 
 String getParam(String name) {
   // read parameter from server, for customhmtl input
@@ -157,8 +183,13 @@ void saveParamCallback() {
 }
 
 void wifiman_loop() {
-  if (wm_nonblocking)
-    wm.process();  // avoid delays() in loop when non-blocking and other long running code
-  checkButton();
-  // put your main code here, to run repeatedly:
+  if (should_reset_wifiman) {
+    should_reset_wifiman = false;
+    Serial.println("Button Held");
+    Serial.println("Erasing Config...");
+    wm.resetSettings();  // wipe settings
+    delay(1000);
+    Serial.println("Erased Config, restarting");
+    ESP.restart();
+  }
 }
